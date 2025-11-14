@@ -4,6 +4,7 @@ services:
     runtime: python
     region: oregon
     plan: free
+    branch: main
     buildCommand: |
       python --version
       pip install --upgrade pip setuptools wheel
