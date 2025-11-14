@@ -48,6 +48,13 @@ logs/
 
 # Database
 *.db
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.turbo/
 *.sqlite
 *.sqlite3
 
