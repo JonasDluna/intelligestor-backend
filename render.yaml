@@ -2,9 +2,12 @@ services:
   - type: web
     name: intelligestor-backend
     runtime: python
-    region: oregon  # Mais próximo do Brasil
-    plan: free  # Pode mudar para starter quando necessário
-    buildCommand: pip install -r requirements.txt
+    region: oregon
+    plan: free
+    buildCommand: |
+      python --version
+      pip install --upgrade pip setuptools wheel
+      pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
     envVars:
       - key: ENVIRONMENT
