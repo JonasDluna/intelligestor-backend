@@ -1,0 +1,270 @@
+﻿import axiosInstance, { ApiResponse } from './axios';
+
+// ============================================
+// AUTHENTICATION
+// ============================================
+
+export const authApi = {
+  // OAuth ML - Iniciar fluxo OAuth
+  async initiateOAuth(userId: string) {
+    const response = await axiosInstance.post<ApiResponse<{ auth_url: string; state: string }>>('/v1/oauth/ml/auth', { user_id: userId });
+    return response.data;
+  },
+
+  // OAuth ML - Callback
+  async handleOAuthCallback(code: string, state: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/oauth/ml/callback', { code, state });
+    return response.data;
+  },
+
+  // OAuth ML - Refresh Token
+  async refreshOAuthToken(userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/oauth/ml/refresh', { user_id: userId });
+    return response.data;
+  },
+
+  // OAuth ML - Status
+  async getOAuthStatus(userId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/oauth/ml/status/'+userId);
+    return response.data;
+  },
+};
+
+// ============================================
+// MERCADO LIVRE
+// ============================================
+
+export const mercadoLivreApi = {
+  // Listar anúncios
+  async listAnuncios(userId: string, sellerId: string, status?: string, limit: number = 50, offset: number = 0) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/ml/anuncios', {
+      params: { user_id: userId, seller_id: sellerId, status, limit, offset },
+    });
+    return response.data;
+  },
+
+  // Detalhes do anúncio
+  async getAnuncio(itemId: string, userId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/ml/anuncios/'+itemId, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+
+  // Criar anúncio
+  async criarAnuncio(userId: string, anuncioData: any) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ml/anuncios', anuncioData, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+
+  // Atualizar anúncio
+  async atualizarAnuncio(itemId: string, userId: string, anuncioData: any) {
+    const response = await axiosInstance.put<ApiResponse>('/v1/ml/anuncios/'+itemId, anuncioData, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+
+  // Pausar anúncio
+  async pausarAnuncio(itemId: string, userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ml/anuncios/'+itemId+'/pause', null, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+
+  // Reativar anúncio
+  async reativarAnuncio(itemId: string, userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ml/anuncios/'+itemId+'/reactivate', null, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+
+  // Finalizar anúncio
+  async finalizarAnuncio(itemId: string, userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ml/anuncios/'+itemId+'/close', null, {
+      params: { user_id: userId },
+    });
+    return response.data;
+  },
+};
+
+// ============================================
+// PRODUTOS
+// ============================================
+
+export const produtosApi = {
+  // Listar produtos
+  async listProdutos(params?: { search?: string; categoria?: string; limit?: number; offset?: number }) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/produtos', { params });
+    return response.data;
+  },
+
+  // Detalhes do produto
+  async getProduto(produtoId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/produtos/'+produtoId);
+    return response.data;
+  },
+
+  // Criar produto
+  async criarProduto(produtoData: any) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/produtos', produtoData);
+    return response.data;
+  },
+
+  // Atualizar produto
+  async atualizarProduto(produtoId: string, produtoData: any) {
+    const response = await axiosInstance.put<ApiResponse>('/v1/produtos/'+produtoId, produtoData);
+    return response.data;
+  },
+
+  // Deletar produto
+  async deletarProduto(produtoId: string) {
+    const response = await axiosInstance.delete<ApiResponse>('/v1/produtos/'+produtoId);
+    return response.data;
+  },
+};
+
+// ============================================
+// ESTOQUE
+// ============================================
+
+export const estoqueApi = {
+  // Listar estoque
+  async listEstoque(params?: { produto_id?: string; baixo_estoque?: boolean; limit?: number; offset?: number }) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/estoque', { params });
+    return response.data;
+  },
+
+  // Atualizar quantidade
+  async atualizarQuantidade(produtoId: string, quantidade: number, tipo: 'entrada' | 'saida', motivo?: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/estoque/movimentacao', {
+      produto_id: produtoId,
+      quantidade,
+      tipo,
+      motivo,
+    });
+    return response.data;
+  },
+
+  // Histórico de movimentações
+  async getMovimentacoes(produtoId?: string, limit: number = 50, offset: number = 0) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/estoque/movimentacoes', {
+      params: { produto_id: produtoId, limit, offset },
+    });
+    return response.data;
+  },
+};
+
+// ============================================
+// VENDAS
+// ============================================
+
+export const vendasApi = {
+  // Listar vendas
+  async listVendas(params?: { status?: string; data_inicio?: string; data_fim?: string; limit?: number; offset?: number }) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/vendas', { params });
+    return response.data;
+  },
+
+  // Detalhes da venda
+  async getVenda(vendaId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/vendas/'+vendaId);
+    return response.data;
+  },
+
+  // Estatísticas de vendas
+  async getEstatisticas(dataInicio?: string, dataFim?: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/vendas/estatisticas', {
+      params: { data_inicio: dataInicio, data_fim: dataFim },
+    });
+    return response.data;
+  },
+};
+
+// ============================================
+// CLIENTES
+// ============================================
+
+export const clientesApi = {
+  // Listar clientes
+  async listClientes(params?: { search?: string; limit?: number; offset?: number }) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/clientes', { params });
+    return response.data;
+  },
+
+  // Detalhes do cliente
+  async getCliente(clienteId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/clientes/'+clienteId);
+    return response.data;
+  },
+
+  // Histórico de compras do cliente
+  async getHistoricoCompras(clienteId: string) {
+    const response = await axiosInstance.get<ApiResponse>('/v1/clientes/'+clienteId+'/compras');
+    return response.data;
+  },
+};
+
+// ============================================
+// IA / BUYBOX
+// ============================================
+
+export const iaApi = {
+  // Análise de BuyBox
+  async analisarBuybox(itemId: string, userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ia/buybox/analisar', { item_id: itemId, user_id: userId });
+    return response.data;
+  },
+
+  // Otimizar preço
+  async otimizarPreco(itemId: string, userId: string, estrategia: 'agressiva' | 'moderada' | 'conservadora') {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ia/buybox/otimizar', {
+      item_id: itemId,
+      user_id: userId,
+      estrategia,
+    });
+    return response.data;
+  },
+
+  // Sugestões de descrição
+  async gerarDescricao(produtoData: any) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ia/produtos/gerar-descricao', produtoData);
+    return response.data;
+  },
+
+  // Análise de concorrência
+  async analisarConcorrencia(itemId: string, userId: string) {
+    const response = await axiosInstance.post<ApiResponse>('/v1/ia/produtos/analisar-concorrencia', {
+      item_id: itemId,
+      user_id: userId,
+    });
+    return response.data;
+  },
+};
+
+// ============================================
+// HEALTH CHECK
+// ============================================
+
+export const healthApi = {
+  async check() {
+    const response = await axiosInstance.get<ApiResponse>('/health');
+    return response.data;
+  },
+};
+
+// Export all
+export default {
+  auth: authApi,
+  ml: mercadoLivreApi,
+  produtos: produtosApi,
+  estoque: estoqueApi,
+  vendas: vendasApi,
+  clientes: clientesApi,
+  ia: iaApi,
+  health: healthApi,
+};
