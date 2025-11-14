@@ -1,0 +1,65 @@
+### Intelligestor Backend - API Tests
+### Use a extensão REST Client para executar estas requisições
+### Clique em "Send Request" acima de cada requisição
+
+### Variáveis
+@baseUrl = http://localhost:3000
+@apiUrl = {{baseUrl}}/api
+
+###############################################
+### 1. Health Check
+###############################################
+
+GET {{baseUrl}}/health
+
+###############################################
+### 2. Supabase Data
+###############################################
+
+GET {{apiUrl}}/data
+
+###############################################
+### 3. OpenAI Chat - Exemplo Simples
+###############################################
+
+POST {{apiUrl}}/chat
+Content-Type: application/json
+
+{
+  "message": "Olá! O que você pode fazer?"
+}
+
+###############################################
+### 4. OpenAI Chat - Pergunta sobre IA
+###############################################
+
+POST {{apiUrl}}/chat
+Content-Type: application/json
+
+{
+  "message": "Explique em poucas palavras o que é inteligência artificial"
+}
+
+###############################################
+### 5. OpenAI Chat - Código
+###############################################
+
+POST {{apiUrl}}/chat
+Content-Type: application/json
+
+{
+  "message": "Crie um exemplo de função JavaScript que soma dois números"
+}
+
+###############################################
+### 6. Análise Combinada (Supabase + OpenAI)
+### Requer tabela criada no Supabase
+###############################################
+
+POST {{apiUrl}}/analyze
+Content-Type: application/json
+
+{
+  "dataId": "123",
+  "prompt": "Analise estes dados e me dê insights"
+}

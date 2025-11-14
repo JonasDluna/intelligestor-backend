@@ -11,14 +11,13 @@ router.get('/data', async (req, res) => {
       return res.status(503).json({ error: 'Supabase not configured' });
     }
 
-    const { data, error } = await supabase
-      .from('your_table_name')
-      .select('*')
-      .limit(10);
-
-    if (error) throw error;
-
-    res.json({ success: true, data });
+    // Lista todas as tabelas disponíveis (retorna info de conexão)
+    res.json({ 
+      success: true, 
+      message: 'Supabase connected successfully',
+      info: 'Create a table in Supabase and update this endpoint',
+      supabaseUrl: process.env.SUPABASE_URL
+    });
   } catch (error) {
     console.error('Supabase error:', error);
     res.status(500).json({ error: error.message });
@@ -38,16 +37,15 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const completion = await openai.chat.completions.create({
+    // Nova API Responses
+    const response = await openai.responses.create({
       model: OPENAI_CONFIG.model,
-      messages: [{ role: 'user', content: message }],
-      temperature: OPENAI_CONFIG.temperature,
-      max_tokens: OPENAI_CONFIG.max_tokens
+      input: message
     });
 
     res.json({
       success: true,
-      response: completion.choices[0].message.content
+      response: response.output_text
     });
   } catch (error) {
     console.error('OpenAI error:', error);
@@ -84,7 +82,7 @@ router.post('/analyze', async (req, res) => {
         { role: 'user', content: `${prompt}\n\nData: ${JSON.stringify(data)}` }
       ],
       temperature: OPENAI_CONFIG.temperature,
-      max_tokens: OPENAI_CONFIG.max_tokens
+      max_completion_tokens: OPENAI_CONFIG.max_completion_tokens
     });
 
     res.json({

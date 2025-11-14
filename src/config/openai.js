@@ -12,9 +12,9 @@ if (!apiKey) {
 export const openai = apiKey ? new OpenAI({ apiKey }) : null;
 
 export const OPENAI_CONFIG = {
-  model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+  model: process.env.OPENAI_MODEL || 'gpt-5',
   temperature: 0.7,
-  max_tokens: 2000
+  max_completion_tokens: 2000
 };
 
 export default openai;
