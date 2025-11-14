@@ -3,23 +3,18 @@
   "name": "intelligestor-backend-rlyo",
   "builds": [
     {
-      "src": "main.py",
+      "src": "api/index.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "main.py"
+      "dest": "api/index.py"
     }
   ],
   "env": {
     "ENVIRONMENT": "production",
     "DEBUG": "False"
-  },
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.11"
-    }
   }
 }

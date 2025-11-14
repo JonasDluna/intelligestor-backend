@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     RENDER_SERVICE_ID: str = os.getenv("RENDER_SERVICE_ID", "")
     RENDER_URL: str = os.getenv("RENDER_URL", "")
     
+    # Vercel Configuration
+    VERCEL_PROJECT_ID: str = os.getenv("VERCEL_PROJECT_ID", "")
+    VERCEL_URL: str = os.getenv("VERCEL_URL", "")
+    
     # Application Settings
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
@@ -41,9 +45,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:8000",
         "https://intelligestor-backend.onrender.com",
-        "https://intelligestor-backend-rlyo.vercel.app",
-        "https://vercel.app",
-        "https://*.vercel.app"
+        "https://intelligestor-backend-rlyo.vercel.app"
     ]
     
     # JWT Settings
@@ -53,6 +55,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignorar variáveis extras do .env
 
 
 # Instância global das configurações
