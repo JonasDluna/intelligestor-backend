@@ -47,16 +47,19 @@ PORT=3000
 NODE_ENV=development
 
 # Supabase
-SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_URL=https://wsluajpeibcfeerbxqiz.supabase.co
 SUPABASE_ANON_KEY=sua-chave-anon
 SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 
 # OpenAI
-OPENAI_API_KEY=sk-sua-chave-openai
-OPENAI_MODEL=gpt-4-turbo-preview
+OPENAI_API_KEY=sua-chave-openai
+OPENAI_MODEL=gpt-5.1
 
-# CORS
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+# CORS (desenvolvimento + produção)
+**Produção:**
+```env
+ALLOWED_ORIGINS=https://intelligestor.com,https://www.intelligestor.com
+```
 ```
 
 ### 4. Execute o servidor
