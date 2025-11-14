@@ -15,7 +15,8 @@ from app.routers import (
     produtos,
     estoque,
     ml,
-    automacao
+    automacao,
+    webhooks_ml
 )
 
 # Criar aplicação FastAPI
@@ -40,6 +41,7 @@ app.add_middleware(
 # Auth & Catalog
 app.include_router(auth_ml.router)
 app.include_router(catalog.router)
+app.include_router(webhooks_ml.router)
 
 # IA (Legacy + New)
 app.include_router(ia_buybox.router)
