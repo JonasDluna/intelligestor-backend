@@ -62,12 +62,17 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
-# Validações
+# Validações em produção - warnings em vez de errors para permitir deployment inicial
+import warnings
+
 if not settings.OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY não configurada. Defina no .env ou nas variáveis de ambiente.")
+    warnings.warn("⚠️  OPENAI_API_KEY não configurada. Funcionalidades de IA não funcionarão.")
 
 if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
-    raise RuntimeError("Configurações do Supabase não encontradas. Defina SUPABASE_URL e SUPABASE_ANON_KEY no .env")
+    warnings.warn("⚠️  Configurações do Supabase não encontradas. Database não funcionará.")
+
+if not settings.ML_CLIENT_ID or not settings.ML_CLIENT_SECRET:
+    warnings.warn("⚠️  Credenciais do Mercado Livre não configuradas. OAuth não funcionará.")
 
 
 # Exportações para compatibilidade com código existente
