@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: intelligestor-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4-turbo-preview
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend-domain.vercel.app
+    healthCheckPath: /health
+    autoDeploy: true
