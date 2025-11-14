@@ -55,11 +55,8 @@ SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 OPENAI_API_KEY=sua-chave-openai
 OPENAI_MODEL=gpt-5.1
 
-# CORS (desenvolvimento + produção)
-**Produção:**
-```env
-ALLOWED_ORIGINS=https://intelligestor.com,https://www.intelligestor.com
-```
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,https://intelligestor.com
 ```
 
 ### 4. Execute o servidor
