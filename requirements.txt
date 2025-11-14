@@ -1,0 +1,23 @@
+# FastAPI and Server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Pydantic for data validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# HTTP Client (compatible with supabase 2.3.0)
+httpx>=0.24.0,<0.25.0
+
+# Database - Supabase
+supabase==2.3.0
+
+# OpenAI API
+openai==1.3.7
+
+# Environment variables
+python-dotenv==1.0.0
+
+# CORS middleware (included in FastAPI but explicit for clarity)
+# starlette (comes with FastAPI)
