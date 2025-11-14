@@ -79,3 +79,27 @@ if not settings.ML_CLIENT_ID or not settings.ML_CLIENT_SECRET:
 OPENAI_API_KEY = settings.OPENAI_API_KEY
 OPENAI_MODEL = settings.OPENAI_MODEL
 
+
+# Supabase Client Singleton
+_supabase_client = None
+
+def get_supabase_client():
+    """
+    Retorna cliente Supabase singleton
+    Inicializa apenas uma vez para melhor performance
+    """
+    global _supabase_client
+    
+    if _supabase_client is None:
+        from supabase import create_client
+        
+        if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+            raise RuntimeError("Supabase não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.")
+        
+        _supabase_client = create_client(
+            settings.SUPABASE_URL,
+            settings.SUPABASE_SERVICE_ROLE_KEY  # Service role para bypass RLS
+        )
+    
+    return _supabase_client
+

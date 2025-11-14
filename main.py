@@ -7,7 +7,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config.settings import settings
-from app.routers import ia_buybox, ia_products, auth_ml, catalog
+from app.routers import (
+    ia_buybox, 
+    ia_products, 
+    auth_ml, 
+    catalog,
+    produtos,
+    estoque,
+    ml,
+    automacao
+)
 
 # Criar aplicação FastAPI
 app = FastAPI(
@@ -28,10 +37,19 @@ app.add_middleware(
 )
 
 # Incluir routers
+# Auth & Catalog
 app.include_router(auth_ml.router)
+app.include_router(catalog.router)
+
+# IA (Legacy + New)
 app.include_router(ia_buybox.router)
 app.include_router(ia_products.router)
-app.include_router(catalog.router)
+
+# Core V2.0 - Novos endpoints
+app.include_router(produtos.router)
+app.include_router(estoque.router)
+app.include_router(ml.router)
+app.include_router(automacao.router)
 
 
 @app.get("/")
