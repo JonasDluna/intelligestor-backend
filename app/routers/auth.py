@@ -130,7 +130,7 @@ async def register(data: UserRegister):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "nome": user.get("nome_completo"),
+            "name": user.get("nome_completo"),
             "empresa": user.get("empresa")
         }
     }
@@ -172,7 +172,7 @@ async def login(data: UserLogin):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "nome": user.get("nome_completo"),
+            "name": user.get("nome_completo"),
             "empresa": user.get("empresa")
         }
     }

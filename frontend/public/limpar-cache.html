@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpar Cache - IntelliGestor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .success {
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: none;
+        }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🧹</div>
+        <h1>Limpar Cache do Sistema</h1>
+        <p>Clique no botão abaixo para limpar todos os dados salvos localmente (tokens, sessões antigas, etc.) e resolver problemas de login.</p>
+        <button onclick="clearCache()">Limpar Cache Agora</button>
+        <p class="success" id="success">✅ Cache limpo com sucesso!<br>Você pode fechar esta aba.</p>
+    </div>
+
+    <script>
+        function clearCache() {
+            // Limpa localStorage
+            localStorage.clear();
+            
+            // Limpa sessionStorage
+            sessionStorage.clear();
+            
+            // Limpa cookies (opcional, mas seguro)
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Mostra mensagem de sucesso
+            document.getElementById('success').style.display = 'block';
+            
+            // Desabilita botão
+            event.target.disabled = true;
+            event.target.textContent = 'Cache Limpo!';
+            event.target.style.background = '#10b981';
+            
+            console.log('✅ Cache limpo com sucesso!');
+            console.log('📦 localStorage:', localStorage);
+            console.log('📦 sessionStorage:', sessionStorage);
+            
+            // Redireciona após 2 segundos
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

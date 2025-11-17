@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userData: User = {
         id: user.id,
-        name: user.name || user.nome || user.email.split('@')[0],
+        name: user.name || user.email.split('@')[0],
         email: user.email,
         ml_connected: false,
       };
@@ -83,6 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('user_data', JSON.stringify(userData));
       setUser(userData);
+      
+      console.log('✅ Login realizado:', userData);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -114,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userData: User = {
         id: user.id,
-        name: user.nome || user.name || user.email.split('@')[0],
+        name: user.name || user.email.split('@')[0],
         email: user.email,
         ml_connected: false,
       };
@@ -122,6 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('user_data', JSON.stringify(userData));
       setUser(userData);
+      
+      console.log('✅ Registro realizado:', userData);
     } catch (error) {
       console.error('Register error:', error);
       throw error;
