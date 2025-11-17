@@ -1,7 +1,7 @@
 """
 Router para autenticação OAuth2 com Mercado Livre
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Form, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
 import httpx
 from typing import Optional
@@ -48,16 +48,31 @@ async def mercadolivre_login(user_id: str = Query("default", description="ID do 
     return RedirectResponse(url=auth_url)
 
 
-@router.get("/callback")
+@router.api_route("/callback", methods=["GET", "POST"])
 async def mercadolivre_callback(
-    code: str = Query(..., description="Código de autorização do ML"),
-    state: str = Query("default", description="User ID passado no state"),
+    request: Request,
+    code: Optional[str] = Query(None, description="Código de autorização do ML (GET)"),
+    state: Optional[str] = Query(None, description="User ID passado no state (GET)"),
     error: Optional[str] = Query(None, description="Erro retornado pelo ML")
 ):
     """
     Callback do OAuth2 do Mercado Livre
     Troca o código de autorização por access_token e salva no Supabase
+    Aceita GET e POST (ML pode usar ambos)
     """
+    # Se for POST, tentar pegar do form
+    if request.method == "POST":
+        form_data = await request.form()
+        code = code or form_data.get("code")
+        state = state or form_data.get("state")
+        error = error or form_data.get("error")
+    
+    # Valores padrão
+    state = state or "default"
+    
+    print(f"[DEBUG] Callback recebido - Method: {request.method}")
+    print(f"[DEBUG] Code: {code}, State: {state}, Error: {error}")
+    
     if error:
         return HTMLResponse(content=f"""
             <html>
