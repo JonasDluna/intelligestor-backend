@@ -1,5 +1,6 @@
 'use client';
 
+import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import AppLayout from '@/components/templates/AppLayout';
 import { DollarSign, ShoppingBag, Users, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 

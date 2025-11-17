@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Bell, Search, Menu, LogOut } from 'lucide-react';
 import { Avatar } from '@/components/atoms';
 import { cn } from '@/lib/utils';
@@ -13,6 +14,12 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle, sidebarCollapsed = false }) => {
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <header
@@ -69,12 +76,12 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, sidebarCollapsed =
           />
 
           <button
-            onClick={logout}
-            className="rounded-lg p-2 hover:bg-gray-100 transition-colors"
+            onClick={handleLogout}
+            className="rounded-lg p-2 hover:bg-red-50 transition-colors group"
             aria-label="Sair"
-            title="Sair"
+            title="Sair da conta"
           >
-            <LogOut className="h-5 w-5 text-gray-600" />
+            <LogOut className="h-5 w-5 text-gray-600 group-hover:text-red-600" />
           </button>
         </div>
       </div>

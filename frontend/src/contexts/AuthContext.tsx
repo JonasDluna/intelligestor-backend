@@ -11,11 +11,19 @@ interface User {
   ml_connected: boolean;
 }
 
+interface RegisterData {
+  nome: string;
+  email: string;
+  senha: string;
+  empresa?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   connectMercadoLivre: () => Promise<void>;
   checkMLConnection: () => Promise<boolean>;
@@ -67,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userData: User = {
         id: user.id,
-        name: user.name || user.email.split('@')[0],
+        name: user.name || user.nome || user.email.split('@')[0],
         email: user.email,
         ml_connected: false,
       };
@@ -77,6 +85,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const register = async (data: RegisterData) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.senha,
+          nome: data.nome,
+          empresa: data.empresa,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw { response: { data: errorData } };
+      }
+
+      const responseData = await response.json();
+      const { access_token, user } = responseData;
+
+      const userData: User = {
+        id: user.id,
+        name: user.nome || user.name || user.email.split('@')[0],
+        email: user.email,
+        ml_connected: false,
+      };
+
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('user_data', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('Register error:', error);
       throw error;
     }
   };
@@ -140,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
         connectMercadoLivre,
         checkMLConnection,

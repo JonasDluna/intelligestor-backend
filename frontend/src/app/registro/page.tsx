@@ -4,32 +4,57 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, Button, Input, Alert, Spinner } from '@/components/atoms';
-import { LogIn, Mail, Lock, ShoppingBag, Brain, Zap, AlertCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Building, ShoppingBag, Brain, Zap, AlertCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegistroPage() {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [empresa, setEmpresa] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { register } = useAuth();
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!email || !senha) {
-      setError('Preencha todos os campos');
+    // Validações
+    if (!nome || !email || !senha || !confirmarSenha) {
+      setError('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      setError('As senhas não coincidem');
+      return;
+    }
+
+    if (senha.length < 6) {
+      setError('A senha deve ter no mínimo 6 caracteres');
       return;
     }
 
     setLoading(true);
     try {
-      await login(email, senha);
+      await register({
+        nome,
+        email,
+        senha,
+        empresa: empresa || undefined,
+      });
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError('Erro ao fazer login. Verifique suas credenciais.');
+      const error = err as { response?: { data?: { detail?: string } } };
+      if (error.response?.data?.detail) {
+        setError(error.response.data.detail);
+      } else {
+        setError('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
@@ -38,6 +63,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        {/* Coluna Esquerda - Informações */}
         <div className="hidden lg:block space-y-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -47,7 +73,7 @@ export default function LoginPage() {
               <h1 className="text-4xl font-bold text-gray-900">IntelliGestor</h1>
             </div>
             <p className="text-xl text-gray-600">
-              Sistema Inteligente de Gestão de E-commerce
+              Comece gratuitamente e transforme seu e-commerce
             </p>
           </div>
 
@@ -89,25 +115,31 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-            <p className="text-sm font-medium mb-2">✨ Novo Recurso</p>
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 text-white">
+            <p className="text-sm font-medium mb-2">🎉 Grátis para começar</p>
             <p className="text-lg font-bold">
-              Geração de descrições com GPT-4
+              Sem cartão de crédito necessário
             </p>
-            <p className="text-sm text-blue-100 mt-2">
-              Crie descrições profissionais para seus produtos em segundos
+            <p className="text-sm text-green-100 mt-2">
+              Crie sua conta e comece a usar agora mesmo
             </p>
           </div>
         </div>
 
+        {/* Coluna Direita - Formulário */}
         <Card className="shadow-2xl">
           <CardContent className="p-8">
+            <Link href="/login" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6">
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para login
+            </Link>
+
             <div className="text-center mb-8">
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <LogIn className="h-8 w-8 text-white" />
+              <div className="bg-gradient-to-br from-green-600 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Bem-vindo de volta!</h2>
-              <p className="text-gray-600 mt-2">Entre com suas credenciais para continuar</p>
+              <h2 className="text-2xl font-bold text-gray-900">Criar conta grátis</h2>
+              <p className="text-gray-600 mt-2">Preencha seus dados para começar</p>
             </div>
 
             {error && (
@@ -119,10 +151,25 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleRegister} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  E-mail
+                  Nome completo *
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  leftIcon={<User className="h-5 w-5" />}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  E-mail *
                 </label>
                 <Input
                   type="email"
@@ -137,13 +184,42 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Senha
+                  Empresa (opcional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Nome da sua empresa"
+                  value={empresa}
+                  onChange={(e) => setEmpresa(e.target.value)}
+                  leftIcon={<Building className="h-5 w-5" />}
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Senha *
                 </label>
                 <Input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Mínimo 6 caracteres"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
+                  leftIcon={<Lock className="h-5 w-5" />}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirmar senha *
+                </label>
+                <Input
+                  type="password"
+                  placeholder="Digite a senha novamente"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
                   leftIcon={<Lock className="h-5 w-5" />}
                   disabled={loading}
                   required
@@ -155,20 +231,27 @@ export default function LoginPage() {
                 variant="primary"
                 className="w-full"
                 disabled={loading}
-                icon={loading ? <Spinner size="sm" /> : <LogIn />}
+                icon={loading ? <Spinner size="sm" /> : <UserPlus />}
               >
-                {loading ? 'Entrando...' : 'Entrar'}
+                {loading ? 'Criando conta...' : 'Criar conta grátis'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Não tem uma conta?{' '}
-                <a href="/registro" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Criar conta grátis
-                </a>
+                Já tem uma conta?{' '}
+                <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Fazer login
+                </Link>
               </p>
             </div>
+
+            <p className="text-xs text-gray-500 text-center mt-6">
+              Ao criar uma conta, você concorda com nossos{' '}
+              <a href="#" className="text-blue-600 hover:underline">Termos de Uso</a>
+              {' '}e{' '}
+              <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a>
+            </p>
           </CardContent>
         </Card>
       </div>
