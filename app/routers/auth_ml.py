@@ -148,7 +148,12 @@ async def mercadolivre_callback(
         
         # Salvar no Supabase
         supabase = get_supabase_client()
-        supabase.table("tokens_ml").upsert({
+        
+        # Primeiro tenta deletar token antigo se existir
+        supabase.table("tokens_ml").delete().eq("user_id", state).execute()
+        
+        # Depois insere o novo
+        supabase.table("tokens_ml").insert({
             "user_id": state,  # Nosso user_id interno
             "ml_user_id": ml_user_id,
             "access_token": access_token,
@@ -157,7 +162,7 @@ async def mercadolivre_callback(
             "nickname": user_info.get("nickname"),
             "email": user_info.get("email"),
             "site_id": user_info.get("site_id", "MLB")
-        }, on_conflict="user_id").execute()
+        }).execute()
         
         return HTMLResponse(content=f"""
             <html>
