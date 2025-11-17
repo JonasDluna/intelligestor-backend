@@ -29,13 +29,19 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configurar CORS - Permitir todas as origens temporariamente
+# Configurar CORS - Permitir origens específicas
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for testing
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://intelligestor-frontend.vercel.app",
+        "https://*.vercel.app",  # Todos os previews do Vercel
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Incluir routers
