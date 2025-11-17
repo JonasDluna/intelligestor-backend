@@ -16,7 +16,7 @@ from app.config.settings import get_supabase_client
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 
 
-def get_produto_service(user_id: str = "default") -> ProdutoService:
+def get_produto_service(user_id: str = "c98c6de3-2c35-4840-880f-70d7215fc3e5") -> ProdutoService:
     """Dependency injection do service"""
     # TODO: Pegar user_id real do JWT token
     supabase = get_supabase_client()
