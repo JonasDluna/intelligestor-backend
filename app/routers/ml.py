@@ -9,8 +9,9 @@ from pydantic import BaseModel, Field
 from app.models.schemas import AnuncioMLResponse
 from app.services.ml_service import MercadoLivreService
 from app.config.settings import get_supabase_client
+from app.middleware.auth import get_current_user_id
 
-router = APIRouter(prefix="/mercadolivre", tags=["Mercado Livre"])
+router = APIRouter(prefix="/ml", tags=["Mercado Livre"])
 
 
 # Models específicos
@@ -23,11 +24,45 @@ class StatusAnuncioRequest(BaseModel):
     ml_id: str
 
 
-def get_ml_service(user_id: str = "default") -> MercadoLivreService:
+def get_ml_service(user_id: str = Depends(get_current_user_id)) -> MercadoLivreService:
     """Dependency injection do service"""
-    # TODO: Pegar user_id real do JWT token
     supabase = get_supabase_client()
     return MercadoLivreService(supabase, user_id)
+
+
+@router.get("/status")
+async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
+    """
+    Verifica se o usuário tem conta ML conectada
+    
+    Retorna:
+    - connected: bool - Se há token ML válido
+    - ml_user_id: str - ID do usuário no ML (se conectado)
+    - nickname: str - Nome no ML (se conectado)
+    """
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table("tokens_ml")\
+            .select("ml_user_id, nickname, expires_at")\
+            .eq("user_id", user_id)\
+            .maybe_single()\
+            .execute()
+        
+        if result.data:
+            return {
+                "connected": True,
+                "ml_user_id": result.data.get("ml_user_id"),
+                "nickname": result.data.get("nickname"),
+                "expires_at": result.data.get("expires_at")
+            }
+        else:
+            return {
+                "connected": False,
+                "ml_user_id": None,
+                "nickname": None
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao verificar status ML: {str(e)}")
 
 
 @router.post("/sincronizar", response_model=List[AnuncioMLResponse])
