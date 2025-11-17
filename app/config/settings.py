@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
     
     # Mercado Livre Configuration
-    ML_CLIENT_ID: str = os.getenv("ML_CLIENT_ID", "")
-    ML_CLIENT_SECRET: str = os.getenv("ML_CLIENT_SECRET", "")
+    ML_CLIENT_ID: str = os.getenv("ML_CLIENT_ID") or os.getenv("ML_APP_ID", "")
+    ML_CLIENT_SECRET: str = os.getenv("ML_CLIENT_SECRET") or os.getenv("ML_SECRET", "")
     ML_REDIRECT_URI: str = os.getenv("ML_REDIRECT_URI", "")
     ML_AUTH_URL: str = "https://auth.mercadolivre.com.br/authorization"
     ML_TOKEN_URL: str = "https://api.mercadolibre.com/oauth/token"
