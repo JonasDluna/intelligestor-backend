@@ -1,189 +1,173 @@
 'use client';
 
-import React from 'react';
-import { DashboardLayout } from '@/components/templates/DashboardLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
-import { 
-  Package, 
-  DollarSign, 
-  TrendingUp, 
-  ShoppingCart, 
-  AlertCircle, 
-  Info, 
-  Plus,
-  UserPlus,
-  Receipt,
-  FileText
-} from 'lucide-react';
+import AppLayout from '@/components/templates/AppLayout';
+import { DollarSign, ShoppingBag, Users, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function DashboardPage() {
   const stats = [
     {
-      title: 'FATURAMENTO TOTAL',
-      value: 'R$ 127.450',
-      subtitle: 'Últimos 30 dias',
-      change: '↑ 15.3%',
+      label: 'Preços Campeões',
+      value: '15',
       icon: DollarSign,
-      iconBg: 'bg-purple-500',
-      changeColor: 'text-green-600',
+      change: '+12.5%',
+      isPositive: true,
+      subtitle: 'vs last month',
+      iconColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-50'
     },
     {
-      title: 'VENDAS REALIZADAS',
-      value: '342',
-      subtitle: 'Pedidos no mês',
-      change: '↑ 8.2%',
-      icon: ShoppingCart,
-      iconBg: 'bg-blue-500',
-      changeColor: 'text-green-600',
+      label: 'Alertas Ativos',
+      value: '3',
+      icon: ShoppingBag,
+      change: '+8.2%',
+      isPositive: true,
+      subtitle: 'vs last month',
+      iconColor: 'text-orange-600',
+      iconBg: 'bg-orange-50'
     },
     {
-      title: 'CLIENTES ATIVOS',
-      value: '1.248',
-      subtitle: 'Base total',
-      change: '↑ 3.7%',
-      icon: UserPlus,
-      iconBg: 'bg-purple-500',
-      changeColor: 'text-green-600',
+      label: 'Perdendo Posição',
+      value: '5',
+      icon: Users,
+      change: '+15.3%',
+      isPositive: false,
+      subtitle: 'vs last month',
+      iconColor: 'text-red-600',
+      iconBg: 'bg-red-50'
     },
     {
-      title: 'TICKET MÉDIO',
-      value: 'R$ 372',
-      subtitle: 'Por venda',
-      change: '↓ 2.1%',
+      label: 'Ajustes Automáticos',
+      value: '8',
       icon: TrendingUp,
-      iconBg: 'bg-blue-500',
-      changeColor: 'text-red-600',
-    },
-    {
-      title: 'CONTAS A RECEBER',
-      value: 'R$ 45.230',
-      subtitle: 'Próximos 30 dias',
-      change: '↑ 18.2%',
-      icon: Receipt,
-      iconBg: 'bg-purple-500',
-      changeColor: 'text-green-600',
-    },
-  ];
-
-  const quickActions = [
-    { icon: Plus, label: 'Nova Venda' },
-    { icon: UserPlus, label: 'Novo Cliente' },
-    { icon: Package, label: 'Novo Produto' },
-    { icon: Receipt, label: 'Contas a Receber' },
-    { icon: FileText, label: 'Contas a Pagar' },
+      change: '+3.1%',
+      isPositive: true,
+      subtitle: 'vs last month',
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-50'
+    }
   ];
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 pb-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Visão geral do seu negócio em tempo real</p>
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Header com saudação */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, Admin!</h1>
+          <p className="text-gray-500">It is the best time to manage your finances</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow"
-            >
-              {/* Icon and Change */}
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.iconBg}`}>
-                  <stat.icon className="h-6 w-6 text-white" />
+        {/* Stats Grid - 4 cards principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`${stat.iconBg} p-3 rounded-xl`}>
+                    <Icon size={24} className={stat.iconColor} strokeWidth={2} />
+                  </div>
+                  <button className="text-gray-400 hover:text-gray-600">
+                    <ArrowUpRight size={20} />
+                  </button>
                 </div>
-                <span className={`text-sm font-semibold ${stat.changeColor}`}>
-                  {stat.change}
-                </span>
+                <div>
+                  <h3 className="text-sm text-gray-600 font-medium mb-1">{stat.label}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
+                  <div className="flex items-center text-sm">
+                    {stat.isPositive ? (
+                      <span className="text-emerald-600 flex items-center">
+                        <ArrowUpRight size={16} className="mr-1" />
+                        {stat.change}
+                      </span>
+                    ) : (
+                      <span className="text-red-600 flex items-center">
+                        <ArrowDownRight size={16} className="mr-1" />
+                        {stat.change}
+                      </span>
+                    )}
+                    <span className="text-gray-500 ml-2">{stat.subtitle}</span>
+                  </div>
+                </div>
               </div>
-              
-              {/* Title */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  {stat.title}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.subtitle}</p>
-              </div>
+            );
+          })}
+        </div>
+
+        {/* Contas a Receber - Card maior */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex items-start justify-between mb-4">
+            <div className="bg-pink-50 p-3 rounded-xl">
+              <CreditCard size={24} className="text-pink-600" strokeWidth={2} />
             </div>
-          ))}
+            <button className="text-gray-400 hover:text-gray-600">
+              <ArrowUpRight size={20} />
+            </button>
+          </div>
+          <div>
+            <h3 className="text-sm text-gray-600 font-medium mb-1">Contas a Receber</h3>
+            <p className="text-3xl font-bold text-gray-900 mb-2">R$ 45.230</p>
+            <div className="flex items-center text-sm">
+              <span className="text-emerald-600 flex items-center">
+                <ArrowUpRight size={16} className="mr-1" />
+                +5.7%
+              </span>
+              <span className="text-gray-500 ml-2">vs last month</span>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 rounded bg-blue-100">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-            </div>
-            <h2 className="text-lg font-bold text-gray-800">Ações Rápidas</h2>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {quickActions.map((action, index) => (
-              <button
-                key={index}
-                className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-left group"
-              >
-                <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-blue-100 transition-colors">
-                  <action.icon className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                  {action.label}
-                </span>
-              </button>
-            ))}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <button className="flex flex-col items-center justify-center p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group">
+              <div className="bg-indigo-100 p-3 rounded-xl mb-3 group-hover:bg-indigo-200 transition-colors">
+                <ShoppingBag className="text-indigo-600" size={24} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Nova Venda</span>
+            </button>
+            <button className="flex flex-col items-center justify-center p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group">
+              <div className="bg-indigo-100 p-3 rounded-xl mb-3 group-hover:bg-indigo-200 transition-colors">
+                <Users className="text-indigo-600" size={24} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Clientes</span>
+            </button>
+            <button className="flex flex-col items-center justify-center p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group">
+              <div className="bg-indigo-100 p-3 rounded-xl mb-3 group-hover:bg-indigo-200 transition-colors">
+                <DollarSign className="text-indigo-600" size={24} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Pagamento</span>
+            </button>
+            <button className="flex flex-col items-center justify-center p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group">
+              <div className="bg-indigo-100 p-3 rounded-xl mb-3 group-hover:bg-indigo-200 transition-colors">
+                <CreditCard className="text-indigo-600" size={24} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Contas</span>
+            </button>
+            <button className="flex flex-col items-center justify-center p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group">
+              <div className="bg-indigo-100 p-3 rounded-xl mb-3 group-hover:bg-indigo-200 transition-colors">
+                <TrendingUp className="text-indigo-600" size={24} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Relatórios</span>
+            </button>
           </div>
         </div>
 
         {/* System Status */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="p-1 rounded-full bg-blue-100">
-              <Info className="h-5 w-5 text-blue-600" />
+        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 rounded-2xl text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold mb-1">Sistema Online</h3>
+              <p className="text-indigo-100 text-sm">Todos os serviços operando normalmente</p>
             </div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Sistema IntelliGest v8</span> · 
-                Conectado ao Supabase. Para mais informações, consulte o{' '}
-                <a href="#" className="text-blue-600 hover:underline font-medium">
-                  termo de uso e política de privacidade
-                </a>.
-              </p>
+            <div className="bg-white/20 px-5 py-2.5 rounded-xl backdrop-blur-sm border border-white/30">
+              <span className="text-sm font-semibold flex items-center">
+                <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                Operacional
+              </span>
             </div>
           </div>
         </div>
-
-        {/* Charts Placeholder */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-gray-200">
-            <CardHeader className="border-b border-gray-200 bg-gray-50">
-              <CardTitle className="text-gray-800 text-base font-semibold">
-                Vendas nos Últimos 7 Dias
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <p className="text-gray-400 text-sm">Nenhum dado disponível</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-gray-200">
-            <CardHeader className="border-b border-gray-200 bg-gray-50">
-              <CardTitle className="text-gray-800 text-base font-semibold">
-                Produtos Mais Vendidos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <p className="text-gray-400 text-sm">Nenhum dado disponível</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </DashboardLayout>
+    </AppLayout>
   );
 }

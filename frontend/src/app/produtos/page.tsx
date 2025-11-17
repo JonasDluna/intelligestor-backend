@@ -1,281 +1,115 @@
 'use client';
 
-import React, { useState } from 'react';
-import { DashboardLayout } from '@/components/templates/DashboardLayout';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Badge, Spinner } from '@/components/atoms';
-import { Package, Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
-import { useProdutos, useDeletarProduto } from '@/lib/hooks';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import type { Produto } from '@/types';
+import AppLayout from '@/components/templates/AppLayout';
+import { useState } from 'react';
+import { Search, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
+
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  stock: number;
+  price: string;
+  status: 'active' | 'inactive';
+}
+
+const products: Product[] = [
+  { id: 1, sku: 'PRD001', name: 'Cadeira Gamer Pro', category: 'Office', stock: 45, price: 'R$ 1.299', status: 'active' },
+  { id: 2, sku: 'PRD002', name: 'Mesa Escritório', category: 'Office', stock: 23, price: 'R$ 899', status: 'active' },
+  { id: 3, sku: 'PRD003', name: 'Sofá 3 Lugares', category: 'Bedroom', stock: 12, price: 'R$ 2.499', status: 'active' },
+  { id: 4, sku: 'PRD004', name: 'Cadeira Fixa', category: 'Cafe', stock: 67, price: 'R$ 299', status: 'active' },
+  { id: 5, sku: 'PRD005', name: 'Poltrona Relax', category: 'Bedroom', stock: 8, price: 'R$ 1.599', status: 'inactive' },
+];
 
 export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoria, setCategoria] = useState('');
 
-  // Buscar produtos com React Query
-  const { data, isLoading, error } = useProdutos({ 
-    search: searchTerm, 
-    categoria: categoria || undefined,
-    limit: 50 
-  });
-
-  const deletarProduto = useDeletarProduto();
-
-  const handleDelete = async (produtoId: string) => {
-    if (confirm('Tem certeza que deseja deletar este produto?')) {
-      try {
-        await deletarProduto.mutateAsync(produtoId);
-        alert('Produto deletado com sucesso!');
-      } catch (error) {
-        alert('Erro ao deletar produto');
-      }
-    }
+  const getStatusBadge = (status: Product['status']) => {
+    return status === 'active' 
+      ? <span className="px-3 py-1 rounded-lg text-sm font-medium bg-green-100 text-green-600">Ativo</span>
+      : <span className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-500">Inativo</span>;
   };
 
-  const produtos = data?.data?.items || [];
-
   return (
-    <DashboardLayout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-            <p className="text-gray-500 mt-1">CatÃƒÂ¡logo completo de produtos</p>
-          </div>
-          <Button icon={<Plus />} variant="primary">
-            Novo Produto
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Produtos</h1>
+          <p className="text-gray-500">Gerencie seu catálogo de produtos</p>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Buscar produtos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  leftIcon={<Search className="h-5 w-5" />}
-                />
-              </div>
-              <div className="w-full md:w-64">
-                <select
-                  value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Todas categorias</option>
-                  <option value="eletronicos">EletrÃƒÂ´nicos</option>
-                  <option value="vestuario">VestuÃƒÂ¡rio</option>
-                  <option value="alimentos">Alimentos</option>
-                  <option value="livros">Livros</option>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div className="relative w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm"
+              placeholder="Buscar produtos..."
+            />
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button className="flex items-center space-x-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white shadow-sm transition-all">
+              <Filter size={18} />
+              <span>Filtros</span>
+            </button>
+            <button className="flex items-center space-x-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white shadow-sm transition-all">
+              <Download size={18} />
+              <span>Exportar</span>
+            </button>
+            <button className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 shadow-md transition-all">
+              <Plus size={18} />
+              <span>Novo Produto</span>
+            </button>
+          </div>
+        </div>
 
         {/* Products Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Lista de Produtos ({produtos.length})</CardTitle>
-              {isLoading && <Spinner size="sm" />}
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {error && (
-              <div className="p-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-                  <p className="font-semibold">Erro ao carregar produtos</p>
-                  <p className="text-sm mt-1">
-                    {error instanceof Error ? error.message : 'Erro desconhecido'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {isLoading && (
-              <div className="p-6">
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="animate-pulse flex items-center gap-4">
-                      <div className="h-16 w-16 bg-gray-200 rounded"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">SKU</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PRODUTO</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">CATEGORIA</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ESTOQUE</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PREÇO</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">STATUS</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">AÇÕES</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {products.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.sku}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{product.category}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{product.stock} un</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">{product.price}</td>
+                    <td className="px-6 py-4">{getStatusBadge(product.status)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                          <Edit size={16} />
+                        </button>
+                        <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {!isLoading && !error && produtos.length === 0 && (
-              <div className="p-12 text-center">
-                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">Nenhum produto encontrado</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {searchTerm || categoria 
-                    ? 'Tente ajustar os filtros de busca' 
-                    : 'Comece adicionando seu primeiro produto'}
-                </p>
-              </div>
-            )}
-
-            {!isLoading && !error && produtos.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Produto
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SKU
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Categoria
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        PreÃƒÂ§o
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Estoque
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        AÃƒÂ§ÃƒÂµes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {produtos.map((produto: Produto) => (
-                      <tr key={produto.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                                <Package className="h-5 w-5 text-gray-400" />
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {produto.nome}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {produto.descricao?.substring(0, 50)}
-                                {produto.descricao && produto.descricao.length > 50 ? '...' : ''}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{produto.sku || '-'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{produto.categoria || '-'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-gray-900">
-                            {formatCurrency(produto.preco_venda)}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Custo: {formatCurrency(produto.preco_custo)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {produto.estoque_atual} un
-                          </div>
-                          {produto.estoque_atual <= produto.estoque_minimo && (
-                            <Badge size="sm" variant="warning" className="mt-1">
-                              Baixo
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={produto.ativo ? 'success' : 'default'}>
-                            {produto.ativo ? 'Ativo' : 'Inativo'}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              className="text-blue-600 hover:text-blue-900 p-1"
-                              title="Visualizar"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button
-                              className="text-gray-600 hover:text-gray-900 p-1"
-                              title="Editar"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(produto.id)}
-                              className="text-red-600 hover:text-red-900 p-1"
-                              title="Deletar"
-                              disabled={deletarProduto.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Stats Summary */}
-        {!isLoading && produtos.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-600">Total de Produtos</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">
-                  {produtos.length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-600">Produtos Ativos</div>
-                <div className="text-2xl font-bold text-green-600 mt-1">
-                  {produtos.filter((p: Produto) => p.ativo).length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-600">Estoque Baixo</div>
-                <div className="text-2xl font-bold text-amber-600 mt-1">
-                  {produtos.filter((p: Produto) => p.estoque_atual <= p.estoque_minimo).length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-600">Valor Total</div>
-                <div className="text-2xl font-bold text-blue-600 mt-1">
-                  {formatCurrency(
-                    produtos.reduce((sum: number, p: Produto) => sum + (p.preco_venda * p.estoque_atual), 0)
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
       </div>
-    </DashboardLayout>
+    </AppLayout>
   );
 }
