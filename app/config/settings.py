@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change_this_secret_key_in_production")
     
-    # CORS Settings
+    # CORS Settings - Allow all origins for Vercel preview deployments
     ALLOWED_ORIGINS: list = [
         "http://localhost:3000",
         "http://localhost:5173",
@@ -47,7 +47,8 @@ class Settings(BaseSettings):
         "https://intelligestor-backend.onrender.com",
         "https://intelligestor-backend-rlyo.vercel.app",
         "https://intelligestor-frontend.vercel.app",
-        "https://intelligestor-frontend-*.vercel.app"  # Preview deployments
+        "https://intelligestor-frontend-git-main-jonasdlunas-projects.vercel.app",
+        "*"  # Allow all for testing - CHANGE IN PRODUCTION
     ]
     
     # JWT Settings
