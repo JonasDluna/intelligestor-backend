@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -13,7 +13,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data, loading }) => {
   if (loading) {
     return (
       <div className="h-80 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Carregando gráfico...</div>
+        <div className="animate-pulse text-gray-400">Carregando grÃ¡fico...</div>
       </div>
     );
   }
@@ -54,7 +54,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data, loading }) => 
   if (loading) {
     return (
       <div className="h-80 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Carregando gráfico...</div>
+        <div className="animate-pulse text-gray-400">Carregando grÃ¡fico...</div>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data, loading }) => {
   if (loading) {
     return (
       <div className="h-64 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Carregando gráfico...</div>
+        <div className="animate-pulse text-gray-400">Carregando grÃ¡fico...</div>
       </div>
     );
   }

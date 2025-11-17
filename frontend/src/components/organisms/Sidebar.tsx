@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -31,7 +31,7 @@ const menuItems = [
   { icon: TrendingUp, label: 'Vendas', href: '/vendas' },
   { icon: DollarSign, label: 'Financeiro', href: '/financeiro' },
   { icon: Users, label: 'Clientes', href: '/clientes' },
-  { icon: Settings, label: 'Configurações', href: '/configuracoes' },
+  { icon: Settings, label: 'ConfiguraÃƒÂ§ÃƒÂµes', href: '/configuracoes' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle }) => {

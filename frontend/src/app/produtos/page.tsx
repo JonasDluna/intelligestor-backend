@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/templates/DashboardLayout';
@@ -41,7 +41,7 @@ export default function ProdutosPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-            <p className="text-gray-500 mt-1">Catálogo completo de produtos</p>
+            <p className="text-gray-500 mt-1">CatÃƒÂ¡logo completo de produtos</p>
           </div>
           <Button icon={<Plus />} variant="primary">
             Novo Produto
@@ -67,8 +67,8 @@ export default function ProdutosPage() {
                   className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="">Todas categorias</option>
-                  <option value="eletronicos">Eletrônicos</option>
-                  <option value="vestuario">Vestuário</option>
+                  <option value="eletronicos">EletrÃƒÂ´nicos</option>
+                  <option value="vestuario">VestuÃƒÂ¡rio</option>
                   <option value="alimentos">Alimentos</option>
                   <option value="livros">Livros</option>
                 </select>
@@ -140,7 +140,7 @@ export default function ProdutosPage() {
                         Categoria
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Preço
+                        PreÃƒÂ§o
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Estoque
@@ -149,7 +149,7 @@ export default function ProdutosPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ações
+                        AÃƒÂ§ÃƒÂµes
                       </th>
                     </tr>
                   </thead>

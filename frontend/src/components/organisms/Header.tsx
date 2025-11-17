@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, sidebarCollapsed =
         {/* Notifications */}
         <button
           className="relative rounded-lg p-2 hover:bg-gray-100 transition-colors"
-          aria-label="Notificações"
+          aria-label="NotificaÃƒÂ§ÃƒÂµes"
         >
           <Bell className="h-5 w-5 text-gray-600" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error" />
@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, sidebarCollapsed =
         {/* User Menu */}
         <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
           <div className="hidden md:block text-right">
-            <p className="text-sm font-medium text-gray-900">{user?.name || 'Usuário'}</p>
+            <p className="text-sm font-medium text-gray-900">{user?.name || 'UsuÃƒÂ¡rio'}</p>
             <p className="text-xs text-gray-500">{user?.email || 'email@exemplo.com'}</p>
           </div>
 

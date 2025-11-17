@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // COMMON TYPES
 // ============================================
 
@@ -48,7 +48,7 @@ export interface Estoque {
   quantidade: number;
   estoque_minimo: number;
   estoque_maximo: number;
-  localização?: string;
+  localizacao?: string;
   updated_at: string;
 }
 
@@ -179,7 +179,7 @@ export interface BuyBoxAnalise {
   diferenca_preco?: number;
   sugestao_preco?: number;
   estrategia_recomendada?: 'agressiva' | 'moderada' | 'conservadora';
-  análise_detalhada?: string;
+  analise_detalhada?: string;
 }
 
 export interface OtimizacaoPreco {
@@ -210,7 +210,7 @@ export interface ConcorrenciaAnalise {
   preco_minimo: number;
   preco_maximo: number;
   total_concorrentes: number;
-  análise_ia?: string;
+  analise_ia?: string;
 }
 
 // ============================================
@@ -252,3 +252,84 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+// ============================================
+// API REQUEST TYPES
+// ============================================
+
+export interface ProdutoApiCreateRequest {
+  sku_interno: string;
+  titulo: string;
+  descricao?: string;
+  categoria_ml?: string;
+  custo?: number;
+  preco_sugerido?: number;
+  margem_minima?: number;
+}
+
+export interface ProdutoCreateRequest {
+  nome: string;
+  descricao?: string;
+  categoria?: string;
+  sku?: string;
+  ean?: string;
+  preco_custo: number;
+  preco_venda: number;
+  estoque_atual?: number;
+  estoque_minimo?: number;
+  estoque_maximo?: number;
+  imagens?: string[];
+}
+
+export type ProdutoUpdateRequest = Partial<ProdutoCreateRequest>;
+
+export interface AnuncioCreateRequest {
+  title: string;
+  category_id: string;
+  price: number;
+  currency_id?: string;
+  available_quantity: number;
+  buying_mode?: string;
+  listing_type_id?: string;
+  condition: 'new' | 'used';
+  description?: string;
+  pictures?: { source: string }[];
+  attributes?: { id: string; value_name: string }[];
+  shipping?: {
+    mode: string;
+    free_shipping?: boolean;
+  };
+}
+
+export type AnuncioUpdateRequest = Partial<AnuncioCreateRequest>;
+
+export interface DescricaoProdutoRequest {
+  titulo: string;
+  categoria?: string;
+  marca?: string;
+  modelo?: string;
+  caracteristicas?: string;
+  beneficios?: string;
+  publico_alvo?: string;
+  diferenciais?: string;
+}
+
+export interface AutomacaoCreateRequest {
+  nome: string;
+  tipo: 'preco' | 'estoque' | 'anuncio';
+  regras: Record<string, unknown>;
+  ativo: boolean;
+  produtos?: string[];
+}
+
+export type AutomacaoUpdateRequest = Partial<AutomacaoCreateRequest>;
+
+export interface ClienteCreateRequest {
+  nome: string;
+  email?: string;
+  telefone?: string;
+  cpf_cnpj?: string;
+  endereco?: Endereco;
+}
+
+export type ClienteUpdateRequest = Partial<ClienteCreateRequest>;

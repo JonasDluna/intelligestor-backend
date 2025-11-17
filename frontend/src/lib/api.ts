@@ -2,6 +2,17 @@
 // Cliente API correto para o IntelliGestor Backend
 
 import axiosInstance, { ApiResponse } from './axios';
+import type { 
+  ProdutoApiCreateRequest,
+  ProdutoUpdateRequest, 
+  AnuncioCreateRequest, 
+  AnuncioUpdateRequest,
+  DescricaoProdutoRequest,
+  AutomacaoCreateRequest,
+  AutomacaoUpdateRequest,
+  ClienteCreateRequest,
+  ClienteUpdateRequest
+} from '@/types';
 
 // ============================================
 // HEALTH & INFO
@@ -75,21 +86,13 @@ export const produtosApi = {
   },
 
   // Criar produto
-  async create(produtoData: {
-    sku_interno: string;
-    titulo: string;
-    descricao?: string;
-    categoria_ml?: string;
-    custo?: number;
-    preco_sugerido?: number;
-    margem_minima?: number;
-  }) {
+  async create(produtoData: ProdutoApiCreateRequest) {
     const response = await axiosInstance.post<ApiResponse>('/produtos/', produtoData);
     return response.data;
   },
 
   // Atualizar produto
-  async update(produtoId: number | string, produtoData: any) {
+  async update(produtoId: number | string, produtoData: ProdutoUpdateRequest) {
     const response = await axiosInstance.put<ApiResponse>('/produtos/' + produtoId, produtoData);
     return response.data;
   },
@@ -169,13 +172,13 @@ export const mercadoLivreApi = {
   },
 
   // Criar anúncio
-  async createAnuncio(anuncioData: any) {
+  async createAnuncio(anuncioData: AnuncioCreateRequest) {
     const response = await axiosInstance.post<ApiResponse>('/mercadolivre/anuncios', anuncioData);
     return response.data;
   },
 
   // Atualizar anúncio
-  async updateAnuncio(anuncioId: string, anuncioData: any) {
+  async updateAnuncio(anuncioId: string, anuncioData: AnuncioUpdateRequest) {
     const response = await axiosInstance.put<ApiResponse>('/mercadolivre/anuncios/' + anuncioId, anuncioData);
     return response.data;
   },
@@ -221,7 +224,7 @@ export const iaApi = {
   },
 
   // Gerar descrição com IA
-  async gerarDescricao(produtoData: any) {
+  async gerarDescricao(produtoData: DescricaoProdutoRequest) {
     const response = await axiosInstance.post<ApiResponse>('/ia/products/description', produtoData);
     return response.data;
   },
@@ -251,13 +254,13 @@ export const automacaoApi = {
   },
 
   // Criar automação
-  async create(automacaoData: any) {
+  async create(automacaoData: AutomacaoCreateRequest) {
     const response = await axiosInstance.post<ApiResponse>('/automacao/', automacaoData);
     return response.data;
   },
 
   // Atualizar automação
-  async update(automacaoId: number | string, automacaoData: any) {
+  async update(automacaoId: number | string, automacaoData: AutomacaoUpdateRequest) {
     const response = await axiosInstance.put<ApiResponse>('/automacao/' + automacaoId, automacaoData);
     return response.data;
   },
@@ -277,6 +280,66 @@ export const automacaoApi = {
   // Executar automação manualmente
   async executar(automacaoId: number | string) {
     const response = await axiosInstance.post<ApiResponse>('/automacao/' + automacaoId + '/executar');
+    return response.data;
+  },
+};
+
+// ============================================
+// VENDAS
+// ============================================
+
+export const vendasApi = {
+  // Listar vendas
+  async list(params?: { skip?: number; limit?: number; data_inicio?: string; data_fim?: string }) {
+    const response = await axiosInstance.get<ApiResponse>('/vendas/', { params });
+    return response.data;
+  },
+
+  // Buscar venda por ID
+  async getById(vendaId: number | string) {
+    const response = await axiosInstance.get<ApiResponse>('/vendas/' + vendaId);
+    return response.data;
+  },
+
+  // Estatísticas de vendas
+  async estatisticas(params?: { data_inicio?: string; data_fim?: string }) {
+    const response = await axiosInstance.get<ApiResponse>('/vendas/estatisticas', { params });
+    return response.data;
+  },
+};
+
+// ============================================
+// CLIENTES
+// ============================================
+
+export const clientesApi = {
+  // Listar clientes
+  async list(params?: { skip?: number; limit?: number }) {
+    const response = await axiosInstance.get<ApiResponse>('/clientes/', { params });
+    return response.data;
+  },
+
+  // Buscar cliente por ID
+  async getById(clienteId: number | string) {
+    const response = await axiosInstance.get<ApiResponse>('/clientes/' + clienteId);
+    return response.data;
+  },
+
+  // Criar cliente
+  async create(clienteData: ClienteCreateRequest) {
+    const response = await axiosInstance.post<ApiResponse>('/clientes/', clienteData);
+    return response.data;
+  },
+
+  // Atualizar cliente
+  async update(clienteId: number | string, clienteData: ClienteUpdateRequest) {
+    const response = await axiosInstance.put<ApiResponse>('/clientes/' + clienteId, clienteData);
+    return response.data;
+  },
+
+  // Deletar cliente
+  async delete(clienteId: number | string) {
+    const response = await axiosInstance.delete<ApiResponse>('/clientes/' + clienteId);
     return response.data;
   },
 };
@@ -317,14 +380,18 @@ export const webhooksApi = {
 // EXPORT DEFAULT
 // ============================================
 
-export default {
+const api = {
   health: healthApi,
   auth: authApi,
   produtos: produtosApi,
   estoque: estoqueApi,
+  vendas: vendasApi,
+  clientes: clientesApi,
   ml: mercadoLivreApi,
   ia: iaApi,
   automacao: automacaoApi,
   catalogo: catalogoApi,
   webhooks: webhooksApi,
 };
+
+export default api;

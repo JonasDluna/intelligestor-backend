@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { DashboardLayout } from '@/components/templates/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/atoms';
 import { Users, Plus } from 'lucide-react';
@@ -10,7 +10,7 @@ export default function ClientesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
-            <p className="text-gray-500 mt-1">Base de clientes e histórico</p>
+            <p className="text-gray-500 mt-1">Base de clientes e histÃ³rico</p>
           </div>
           <Button icon={<Plus />}>Novo Cliente</Button>
         </div>
@@ -19,7 +19,7 @@ export default function ClientesPage() {
             <CardTitle>Lista de Clientes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">Gestão de clientes em desenvolvimento...</p>
+            <p className="text-gray-600">GestÃ£o de clientes em desenvolvimento...</p>
           </CardContent>
         </Card>
       </div>

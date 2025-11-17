@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { DashboardLayout } from '@/components/templates/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { DollarSign } from 'lucide-react';
@@ -9,14 +9,14 @@ export default function FinanceiroPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
-          <p className="text-gray-500 mt-1">Gestão financeira e relatórios</p>
+          <p className="text-gray-500 mt-1">GestÃ£o financeira e relatÃ³rios</p>
         </div>
         <Card>
           <CardHeader>
             <CardTitle>Controle Financeiro</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">Módulo financeiro em desenvolvimento...</p>
+            <p className="text-gray-600">MÃ³dulo financeiro em desenvolvimento...</p>
           </CardContent>
         </Card>
       </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '@/lib/api';
@@ -48,7 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const login = async (email: string, _password: string) => {
     try {
       // TODO: Implement actual login API call
       // For now, mock authentication
@@ -79,9 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       // Inicia o fluxo OAuth do Mercado Livre
-      const response = await authApi.initiateOAuth(user.id);
+      const response = await authApi.initiateOAuth();
       
-      if (response.data.auth_url) {
+      if (response.data && response.data.auth_url) {
         // Redireciona para a página de autorização do ML
         window.location.href = response.data.auth_url;
       }
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
 
     try {
-      const response = await authApi.getOAuthStatus(user.id);
+      const response = await authApi.getStatus(user.id);
       const isConnected = response.data?.connected || false;
       
       // Update user ML connection status
@@ -112,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('User not authenticated');
 
     try {
-      await authApi.refreshOAuthToken(user.id);
-      console.log(' ML token refreshed successfully');
+      await authApi.refreshToken(user.id);
+      console.log('ML token refreshed successfully');
     } catch (error) {
       console.error('ML token refresh error:', error);
       throw error;

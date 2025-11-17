@@ -45,7 +45,9 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:8000",
         "https://intelligestor-backend.onrender.com",
-        "https://intelligestor-backend-rlyo.vercel.app"
+        "https://intelligestor-backend-rlyo.vercel.app",
+        "https://intelligestor-frontend.vercel.app",
+        "https://intelligestor-frontend-*.vercel.app"  # Preview deployments
     ]
     
     # JWT Settings
