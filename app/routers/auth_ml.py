@@ -77,8 +77,11 @@ async def mercadolivre_callback(
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 settings.ML_TOKEN_URL,
-                json=token_data,
-                headers={"Accept": "application/json", "Content-Type": "application/json"}
+                data=token_data,  # Usar 'data' em vez de 'json' para application/x-www-form-urlencoded
+                headers={
+                    "Accept": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
             )
             response.raise_for_status()
             token_response = response.json()
@@ -178,8 +181,11 @@ async def refresh_mercadolivre_token(user_id: str):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 settings.ML_TOKEN_URL,
-                json=token_data,
-                headers={"Accept": "application/json", "Content-Type": "application/json"}
+                data=token_data,  # Usar 'data' em vez de 'json'
+                headers={
+                    "Accept": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
             )
             response.raise_for_status()
             token_response = response.json()
