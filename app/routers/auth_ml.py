@@ -146,14 +146,11 @@ async def mercadolivre_callback(
         # Calcular data de expiração
         expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
         
-        # Salvar no Supabase
+        # Salvar no Supabase usando upsert
+        # Conforme docs ML: https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao
+        # Usamos upsert com on_conflict no ml_user_id (que tem constraint UNIQUE)
         supabase = get_supabase_client()
-        
-        # Primeiro tenta deletar token antigo se existir
-        supabase.table("tokens_ml").delete().eq("user_id", state).execute()
-        
-        # Depois insere o novo
-        supabase.table("tokens_ml").insert({
+        supabase.table("tokens_ml").upsert({
             "user_id": state,  # Nosso user_id interno
             "ml_user_id": ml_user_id,
             "access_token": access_token,
@@ -162,7 +159,7 @@ async def mercadolivre_callback(
             "nickname": user_info.get("nickname"),
             "email": user_info.get("email"),
             "site_id": user_info.get("site_id", "MLB")
-        }).execute()
+        }, on_conflict="ml_user_id").execute()
         
         return HTMLResponse(content=f"""
             <html>
