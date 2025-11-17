@@ -365,6 +365,75 @@ export const catalogoApi = {
 };
 
 // ============================================
+// MERCADO LIVRE - EXTENDED
+// ============================================
+
+export const mlExtendedApi = {
+  // Listar anúncios locais
+  async listarAnuncios(limit = 100) {
+    const response = await axiosInstance.get<ApiResponse>('/ml/anuncios', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
+  // Sincronizar anúncios com ML
+  async sincronizar() {
+    const response = await axiosInstance.post<ApiResponse>('/ml/sincronizar');
+    return response.data;
+  },
+
+  // Catalog Items (para BuyBox)
+  async catalogItems() {
+    const response = await axiosInstance.get<ApiResponse>('/ml/catalog/items');
+    return response.data;
+  },
+
+  // Dados BuyBox de um item
+  async buyboxData(itemId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/catalog/buybox/${itemId}`);
+    return response.data;
+  },
+
+  // Listar perguntas
+  async perguntas(status: 'unanswered' | 'answered' | 'all' = 'unanswered') {
+    const response = await axiosInstance.get<ApiResponse>('/ml/perguntas', {
+      params: { status }
+    });
+    return response.data;
+  },
+
+  // Responder pergunta
+  async responderPergunta(questionId: number, resposta: string) {
+    const response = await axiosInstance.post<ApiResponse>('/ml/perguntas/responder', {
+      question_id: questionId,
+      resposta
+    });
+    return response.data;
+  },
+
+  // Listar vendas
+  async vendas(limit = 50) {
+    const response = await axiosInstance.get<ApiResponse>('/ml/vendas', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
+  // Status da conexão ML
+  async status() {
+    const response = await axiosInstance.get<ApiResponse>('/ml/status');
+    return response.data;
+  },
+
+  // Desconectar ML
+  async disconnect() {
+    const response = await axiosInstance.post<ApiResponse>('/ml/disconnect');
+    return response.data;
+  },
+};
+
+// ============================================
 // WEBHOOKS
 // ============================================
 
@@ -388,6 +457,7 @@ const api = {
   vendas: vendasApi,
   clientes: clientesApi,
   ml: mercadoLivreApi,
+  mlExtended: mlExtendedApi,
   ia: iaApi,
   automacao: automacaoApi,
   catalogo: catalogoApi,
@@ -395,3 +465,4 @@ const api = {
 };
 
 export default api;
+

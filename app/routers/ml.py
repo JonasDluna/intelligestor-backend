@@ -232,3 +232,173 @@ async def verificar_token(
         "token_valido": token is not None,
         "message": "Token válido" if token else "Token expirado ou não encontrado"
     }
+
+
+@router.get("/anuncios")
+async def listar_anuncios(
+    limit: int = Query(100, ge=1, le=500),
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Lista anúncios salvos no banco local
+    
+    Retorna anúncios já sincronizados. Use /sincronizar para atualizar.
+    """
+    try:
+        anuncios = await service.listar_anuncios_locais(limit=limit)
+        return {
+            "success": True,
+            "count": len(anuncios),
+            "anuncios": anuncios
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao listar anúncios: {str(e)}")
+
+
+@router.get("/catalog/items")
+async def listar_catalog_items(
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Lista itens do catálogo ML que o usuário possui
+    
+    Retorna apenas anúncios que participam do catálogo ML.
+    Estes são os itens elegíveis para Monitor BuyBox.
+    """
+    try:
+        items = await service.buscar_catalog_items()
+        return {
+            "success": True,
+            "count": len(items),
+            "items": items
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar itens do catálogo: {str(e)}")
+
+
+@router.get("/catalog/buybox/{item_id}")
+async def buscar_buybox(
+    item_id: str,
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Busca dados de BuyBox/concorrência de um item
+    
+    Retorna:
+    - Preço atual do item
+    - Preço do campeão (menor preço)
+    - Diferença percentual
+    - Se está ganhando ou perdendo BuyBox
+    - Quantidade de ofertas concorrentes
+    """
+    try:
+        buybox_data = await service.buscar_buybox_data(item_id)
+        
+        if not buybox_data:
+            raise HTTPException(status_code=404, detail="Dados de BuyBox não encontrados")
+        
+        return {
+            "success": True,
+            "data": buybox_data
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar BuyBox: {str(e)}")
+
+
+@router.get("/perguntas")
+async def listar_perguntas(
+    status: str = Query("unanswered", regex="^(unanswered|answered|all)$"),
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Lista perguntas dos anúncios
+    
+    - **status**: 'unanswered' (pendentes), 'answered' (respondidas), 'all' (todas)
+    
+    Útil para:
+    - Dashboard de perguntas pendentes
+    - Resposta automática por IA
+    - Histórico de atendimento
+    """
+    try:
+        perguntas = await service.buscar_perguntas(status=status)
+        return {
+            "success": True,
+            "count": len(perguntas),
+            "status_filter": status,
+            "perguntas": perguntas
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar perguntas: {str(e)}")
+
+
+class ResponderPerguntaRequest(BaseModel):
+    question_id: int
+    resposta: str = Field(..., min_length=1, max_length=2000)
+
+
+@router.post("/perguntas/responder")
+async def responder_pergunta(
+    request: ResponderPerguntaRequest,
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Responde uma pergunta no Mercado Livre
+    
+    - **question_id**: ID da pergunta (obtido em /ml/perguntas)
+    - **resposta**: Texto da resposta (1-2000 caracteres)
+    
+    A resposta será publicada no ML e o comprador receberá notificação.
+    """
+    try:
+        sucesso = await service.responder_pergunta(request.question_id, request.resposta)
+        
+        if not sucesso:
+            raise HTTPException(
+                status_code=400,
+                detail="Falha ao responder pergunta. Verifique token ML e ID da pergunta."
+            )
+        
+        return {
+            "success": True,
+            "message": "Pergunta respondida com sucesso",
+            "question_id": request.question_id
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao responder pergunta: {str(e)}")
+
+
+@router.get("/vendas")
+async def listar_vendas(
+    limit: int = Query(50, ge=1, le=200),
+    service: MercadoLivreService = Depends(get_ml_service)
+):
+    """
+    Lista vendas/pedidos do Mercado Livre
+    
+    Retorna pedidos ordenados por data (mais recentes primeiro).
+    
+    Útil para:
+    - Dashboard de vendas
+    - Acompanhamento de pedidos
+    - Relatórios financeiros
+    """
+    try:
+        vendas = await service.buscar_vendas(limit=limit)
+        return {
+            "success": True,
+            "count": len(vendas),
+            "vendas": vendas
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar vendas: {str(e)}")
