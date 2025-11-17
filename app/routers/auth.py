@@ -70,7 +70,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     payload = decode_token(token)
     
     supabase = get_supabase_client()
-    result = supabase.table("users").select("*").eq("id", payload["user_id"]).maybe_single().execute()
+    result = supabase.table("usuarios").select("*").eq("id", payload["user_id"]).maybe_single().execute()
     
     if not result.data:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
@@ -93,7 +93,7 @@ async def register(data: UserRegister):
     
     # Verifica se email já existe
     try:
-        existing = supabase.table("users").select("id").eq("email", data.email).maybe_single().execute()
+        existing = supabase.table("usuarios").select("id").eq("email", data.email).maybe_single().execute()
         if existing and existing.data:
             raise HTTPException(status_code=400, detail="Email já cadastrado")
     except Exception as e:
@@ -105,18 +105,17 @@ async def register(data: UserRegister):
     user_data = {
         "email": data.email,
         "password_hash": hashed_password,
-        "nome": data.nome,
+        "nome_completo": data.nome,
         "empresa": data.empresa,
-        "ativo": True,
-        "created_at": datetime.utcnow().isoformat()
+        "status": "active"
     }
     
     try:
-        result = supabase.table("users").insert(user_data).execute()
+        result = supabase.table("usuarios").insert(user_data).execute()
     except Exception as e:
         raise HTTPException(
             status_code=500, 
-            detail=f"Erro ao criar usuário. Verifique se a tabela 'users' existe no Supabase: {str(e)}"
+            detail=f"Erro ao criar usuário. Verifique se a tabela 'usuarios' existe no Supabase: {str(e)}"
         )
     
     if not result.data:
@@ -131,8 +130,8 @@ async def register(data: UserRegister):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "nome": user["nome"],
-            "empresa": user["empresa"]
+            "nome": user.get("nome_completo"),
+            "empresa": user.get("empresa")
         }
     }
 
@@ -149,7 +148,7 @@ async def login(data: UserLogin):
     supabase = get_supabase_client()
     
     # Busca usuário
-    result = supabase.table("users").select("*").eq("email", data.email).maybe_single().execute()
+    result = supabase.table("usuarios").select("*").eq("email", data.email).maybe_single().execute()
     
     if not result.data:
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
@@ -161,7 +160,7 @@ async def login(data: UserLogin):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     
     # Verifica se está ativo
-    if not user.get("ativo", True):
+    if user.get("status") == "suspended":
         raise HTTPException(status_code=403, detail="Usuário desativado")
     
     # Gera token
@@ -173,7 +172,7 @@ async def login(data: UserLogin):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "nome": user["nome"],
+            "nome": user.get("nome_completo"),
             "empresa": user.get("empresa")
         }
     }
