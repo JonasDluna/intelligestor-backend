@@ -30,8 +30,8 @@ export default function MeusAnunciosTab() {
     try {
       setLoading(true);
       const response = await api.mlExtended.listarAnuncios(100);
-      if (response.success && response.anuncios) {
-        setAnuncios(response.anuncios);
+      if (response.data?.success && response.data?.anuncios) {
+        setAnuncios(response.data.anuncios);
       }
     } catch (error) {
       console.error('Erro ao carregar anúncios:', error);
