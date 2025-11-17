@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 import httpx
 from typing import Optional
 from datetime import datetime, timedelta
+from urllib.parse import quote
 
 from app.config.settings import settings, get_supabase_client
 
@@ -29,13 +30,20 @@ async def mercadolivre_login(user_id: str = Query("default", description="ID do 
             detail="Credenciais ML não configuradas. Configure ML_CLIENT_ID e ML_REDIRECT_URI."
         )
     
+    # Limpar e validar redirect_uri
+    redirect_uri = settings.ML_REDIRECT_URI.strip()
+    
+    # Construir URL com URL encoding adequado
     auth_url = (
         f"{settings.ML_AUTH_URL}"
         f"?response_type=code"
         f"&client_id={settings.ML_CLIENT_ID}"
-        f"&redirect_uri={settings.ML_REDIRECT_URI}"
+        f"&redirect_uri={quote(redirect_uri, safe=':/')}"
         f"&state={user_id}"  # Passar user_id via state
     )
+    
+    print(f"[DEBUG] Redirect URI configurado: {redirect_uri}")
+    print(f"[DEBUG] URL de autorização: {auth_url}")
     
     return RedirectResponse(url=auth_url)
 
@@ -65,13 +73,18 @@ async def mercadolivre_callback(
         raise HTTPException(status_code=500, detail="ML_CLIENT_SECRET não configurado")
     
     # Trocar código por token
+    redirect_uri = settings.ML_REDIRECT_URI.strip()
+    
     token_data = {
         "grant_type": "authorization_code",
         "client_id": settings.ML_CLIENT_ID,
         "client_secret": settings.ML_CLIENT_SECRET,
         "code": code,
-        "redirect_uri": settings.ML_REDIRECT_URI
+        "redirect_uri": redirect_uri
     }
+    
+    print(f"[DEBUG] Token request redirect_uri: {redirect_uri}")
+    print(f"[DEBUG] Token data: {token_data}")
     
     try:
         async with httpx.AsyncClient() as client:
@@ -83,6 +96,8 @@ async def mercadolivre_callback(
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
             )
+            print(f"[DEBUG] ML response status: {response.status_code}")
+            print(f"[DEBUG] ML response: {response.text}")
             response.raise_for_status()
             token_response = response.json()
         
