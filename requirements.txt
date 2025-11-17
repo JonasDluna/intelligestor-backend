@@ -7,7 +7,7 @@ python-multipart>=0.0.6
 python-dotenv>=1.0.0
 
 # Database
-supabase>=2.0.0,<3.0.0
+supabase>=2.9.0
 psycopg2-binary>=2.9.0
 
 # AI Integration
@@ -15,7 +15,7 @@ openai>=1.0.0,<2.0.0
 
 # HTTP Requests
 requests>=2.31.0
-httpx>=0.24.0,<0.25.0
+httpx>=0.27.0
 
 # Data Validation (usar versões com wheels pré-compiladas)
 pydantic>=2.0.0,<3.0.0
