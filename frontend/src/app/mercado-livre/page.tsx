@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/templates/AppLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
-import { Brain, TrendingUp, Target, Zap, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { Brain, TrendingUp, Target, Zap, Link as LinkIcon, CheckCircle2, LogOut, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function MercadoLivrePage() {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [mlUserData, setMlUserData] = useState<{ nickname?: string; ml_user_id?: string } | null>(null);
 
   useEffect(() => {
     // Só verificar se o usuário estiver logado
@@ -40,6 +42,12 @@ export default function MercadoLivrePage() {
       if (response.ok) {
         const data = await response.json();
         setIsConnected(data.connected);
+        if (data.connected) {
+          setMlUserData({
+            nickname: data.nickname,
+            ml_user_id: data.ml_user_id
+          });
+        }
       } else if (response.status === 401) {
         console.log('Token inválido ou expirado');
         setIsConnected(false);
@@ -64,6 +72,37 @@ export default function MercadoLivrePage() {
     }
   };
 
+  const disconnectFromML = async () => {
+    if (!confirm('Tem certeza que deseja desconectar sua conta do Mercado Livre? Você perderá acesso às funcionalidades de sincronização e IA.')) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setIsConnected(false);
+        setMlUserData(null);
+        alert('✅ Desconectado do Mercado Livre com sucesso!');
+      } else {
+        throw new Error('Erro ao desconectar');
+      }
+    } catch (error) {
+      console.error('Erro ao desconectar ML:', error);
+      alert('❌ Erro ao desconectar. Tente novamente.');
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -82,9 +121,20 @@ export default function MercadoLivrePage() {
             {!isLoading && (
               <div>
                 {isConnected ? (
-                  <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200">
-                    <CheckCircle2 className="h-5 w-5" />
-                    <span className="font-medium">Conectado ao ML</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="font-medium">Conectado ao ML</span>
+                    </div>
+                    <button
+                      onClick={disconnectFromML}
+                      disabled={isDisconnecting}
+                      className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-4 py-2 rounded-lg font-medium transition-colors border border-red-200 disabled:opacity-50"
+                      title="Desconectar do Mercado Livre"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
+                    </button>
                   </div>
                 ) : (
                   <button
@@ -183,12 +233,34 @@ export default function MercadoLivrePage() {
                     <CheckCircle2 className="h-6 w-6 text-green-600" />
                     <div>
                       <h4 className="font-medium text-green-900">Mercado Livre</h4>
-                      <p className="text-sm text-green-700">Conta conectada e sincronizada</p>
+                      <p className="text-sm text-green-700">
+                        {mlUserData?.nickname ? `@${mlUserData.nickname}` : 'Conta conectada e sincronizada'}
+                      </p>
+                      {mlUserData?.ml_user_id && (
+                        <p className="text-xs text-green-600 mt-1">ID: {mlUserData.ml_user_id}</p>
+                      )}
                     </div>
                   </div>
-                  <button className="text-sm text-green-700 hover:text-green-800 font-medium">
-                    Gerenciar
+                  <button 
+                    onClick={disconnectFromML}
+                    disabled={isDisconnecting}
+                    className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 transition-colors px-3 py-1 rounded hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
                   </button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">Dica</h4>
+                      <p className="text-sm text-blue-800">
+                        Mantenha sua conta conectada para aproveitar sincronização automática, análise de BuyBox e otimização de preços com IA.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

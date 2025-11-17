@@ -65,6 +65,40 @@ async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
         raise HTTPException(status_code=500, detail=f"Erro ao verificar status ML: {str(e)}")
 
 
+@router.post("/disconnect")
+async def desconectar_ml(user_id: str = Depends(get_current_user_id)):
+    """
+    Desconecta conta do Mercado Livre
+    
+    Remove o token de acesso do banco de dados.
+    O usuário precisará reconectar para usar funcionalidades ML novamente.
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        # Deleta o token do usuário
+        result = supabase.table("tokens_ml")\
+            .delete()\
+            .eq("user_id", user_id)\
+            .execute()
+        
+        # Log da desconexão
+        supabase.table("logs_sistema").insert({
+            "user_id": user_id,
+            "nivel": "info",
+            "origem": "ml_disconnect",
+            "acao": "Usuario desconectou conta ML",
+            "detalhes": {"timestamp": "now"}
+        }).execute()
+        
+        return {
+            "success": True,
+            "message": "Conta do Mercado Livre desconectada com sucesso"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao desconectar ML: {str(e)}")
+
+
 @router.post("/sincronizar", response_model=List[AnuncioMLResponse])
 async def sincronizar_anuncios(
     service: MercadoLivreService = Depends(get_ml_service)
