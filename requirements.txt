@@ -20,6 +20,7 @@ httpx>=0.24.0,<0.25.0
 # Data Validation (usar versões com wheels pré-compiladas)
 pydantic>=2.0.0,<3.0.0
 pydantic-settings>=2.0.0,<3.0.0
+email-validator>=2.0.0
 
 # OAuth2 & Security
 python-jose[cryptography]>=3.3.0
