@@ -70,8 +70,13 @@ async def mercadolivre_callback(
     # Valores padrão
     state = state or "default"
     
-    print(f"[DEBUG] Callback recebido - Method: {request.method}")
-    print(f"[DEBUG] Code: {code}, State: {state}, Error: {error}")
+    print(f"[DEBUG] ============ CALLBACK RECEBIDO ============")
+    print(f"[DEBUG] Method: {request.method}")
+    print(f"[DEBUG] URL: {request.url}")
+    print(f"[DEBUG] Code: {code}")
+    print(f"[DEBUG] State: {state}")
+    print(f"[DEBUG] Error: {error}")
+    print(f"[DEBUG] ==========================================")
     
     if error:
         return HTMLResponse(content=f"""
@@ -84,22 +89,43 @@ async def mercadolivre_callback(
             </html>
         """, status_code=400)
     
+    if not code:
+        return HTMLResponse(content=f"""
+            <html>
+                <body style="font-family: Arial; padding: 50px; text-align: center;">
+                    <h1 style="color: #dc3545;">❌ Código de Autorização Ausente</h1>
+                    <p>O código de autorização não foi recebido do Mercado Livre.</p>
+                    <p>Por favor, tente conectar novamente.</p>
+                    <a href="/" style="color: #007bff;">Voltar para o início</a>
+                </body>
+            </html>
+        """, status_code=400)
+    
     if not settings.ML_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="ML_CLIENT_SECRET não configurado")
     
     # Trocar código por token
     redirect_uri = settings.ML_REDIRECT_URI.strip()
     
+    # Limpar o código (remover espaços/newlines se houver)
+    code_clean = code.strip() if code else None
+    
     token_data = {
         "grant_type": "authorization_code",
         "client_id": settings.ML_CLIENT_ID,
         "client_secret": settings.ML_CLIENT_SECRET,
-        "code": code,
+        "code": code_clean,
         "redirect_uri": redirect_uri
     }
     
-    print(f"[DEBUG] Token request redirect_uri: {redirect_uri}")
-    print(f"[DEBUG] Token data: {token_data}")
+    print(f"[DEBUG] ============ TOKEN REQUEST ============")
+    print(f"[DEBUG] ML_TOKEN_URL: {settings.ML_TOKEN_URL}")
+    print(f"[DEBUG] Redirect URI: {redirect_uri}")
+    print(f"[DEBUG] Client ID: {settings.ML_CLIENT_ID}")
+    print(f"[DEBUG] Code (length): {len(code_clean) if code_clean else 0}")
+    print(f"[DEBUG] Code (first 20 chars): {code_clean[:20] if code_clean else 'None'}...")
+    print(f"[DEBUG] Token data (sem secret): {dict((k, v) for k, v in token_data.items() if k != 'client_secret')}")
+    print(f"[DEBUG] =======================================")
     
     try:
         async with httpx.AsyncClient() as client:
@@ -111,8 +137,12 @@ async def mercadolivre_callback(
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
             )
-            print(f"[DEBUG] ML response status: {response.status_code}")
-            print(f"[DEBUG] ML response: {response.text}")
+            print(f"[DEBUG] ============ ML RESPONSE ============")
+            print(f"[DEBUG] Status: {response.status_code}")
+            print(f"[DEBUG] Headers: {dict(response.headers)}")
+            print(f"[DEBUG] Body: {response.text}")
+            print(f"[DEBUG] ====================================")
+            
             response.raise_for_status()
             token_response = response.json()
         
