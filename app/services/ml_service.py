@@ -234,38 +234,50 @@ class MercadoLivreService:
         """
         token = await self._carregar_token()
         if not token:
-            raise ValueError("Token ML não encontrado ou expirado")
+            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
         
         # Busca anúncios locais que têm catalog_product_id
         anuncios = await self.listar_anuncios_locais()
         
+        if not anuncios:
+            return []  # Sem anúncios, retorna lista vazia
+        
         items_catalog = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             for anuncio in anuncios:
                 ml_id = anuncio.get("ml_id")
                 if not ml_id:
                     continue
                 
-                # Busca detalhes do item
-                response = await client.get(
-                    f"{self.ML_API_BASE}/items/{ml_id}",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    catalog_product_id = data.get("catalog_product_id")
+                try:
+                    # Busca detalhes do item
+                    response = await client.get(
+                        f"{self.ML_API_BASE}/items/{ml_id}",
+                        headers={"Authorization": f"Bearer {token}"}
+                    )
                     
-                    if catalog_product_id:
-                        items_catalog.append({
-                            "ml_id": ml_id,
-                            "title": data["title"],
-                            "price": data["price"],
-                            "catalog_product_id": catalog_product_id,
-                            "thumbnail": data.get("thumbnail"),
-                            "permalink": data["permalink"],
-                            "attributes": data.get("attributes", [])
-                        })
+                    if response.status_code == 200:
+                        data = response.json()
+                        catalog_product_id = data.get("catalog_product_id")
+                        
+                        if catalog_product_id:
+                            items_catalog.append({
+                                "ml_id": ml_id,
+                                "title": data["title"],
+                                "price": data["price"],
+                                "catalog_product_id": catalog_product_id,
+                                "thumbnail": data.get("thumbnail"),
+                                "permalink": data["permalink"],
+                                "attributes": data.get("attributes", [])
+                            })
+                    elif response.status_code == 401:
+                        raise ValueError("Token ML expirado. Reconecte-se ao Mercado Livre.")
+                except httpx.TimeoutException:
+                    print(f"Timeout ao buscar item {ml_id}")
+                    continue
+                except Exception as e:
+                    print(f"Erro ao buscar item {ml_id}: {str(e)}")
+                    continue
         
         return items_catalog
     
@@ -276,10 +288,10 @@ class MercadoLivreService:
         """
         token = await self._carregar_token()
         if not token:
-            return None
+            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
         
         # Primeiro busca o catalog_product_id do item
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             item_response = await client.get(
                 f"{self.ML_API_BASE}/items/{item_id}",
                 headers={"Authorization": f"Bearer {token}"}
@@ -364,7 +376,7 @@ class MercadoLivreService:
         """
         token = await self._carregar_token()
         if not token:
-            raise ValueError("Token ML não encontrado ou expirado")
+            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
         
         # Busca ml_user_id
         ml_user = self.db.table("tokens_ml")\
@@ -374,21 +386,27 @@ class MercadoLivreService:
             .execute()
         
         if not ml_user.data:
-            raise ValueError("ML User ID não encontrado")
+            raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
         
         ml_user_id = ml_user.data[0]["ml_user_id"]
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             # Busca perguntas
             params = {"status": status} if status != "all" else {}
-            response = await client.get(
-                f"{self.ML_API_BASE}/questions/search",
-                headers={"Authorization": f"Bearer {token}"},
-                params={**params, "seller_id": ml_user_id}
-            )
-            
-            if response.status_code != 200:
-                return []
+            try:
+                response = await client.get(
+                    f"{self.ML_API_BASE}/questions/search",
+                    headers={"Authorization": f"Bearer {token}"},
+                    params={**params, "seller_id": ml_user_id}
+                )
+                
+                if response.status_code == 401:
+                    raise ValueError("Token ML expirado. Reconecte-se ao Mercado Livre.")
+                
+                if response.status_code != 200:
+                    return []
+            except httpx.TimeoutException:
+                raise ValueError("Timeout ao buscar perguntas do Mercado Livre")
             
             data = response.json()
             questions = data.get("questions", [])
@@ -432,7 +450,7 @@ class MercadoLivreService:
         """
         token = await self._carregar_token()
         if not token:
-            raise ValueError("Token ML não encontrado ou expirado")
+            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
         
         # Busca ml_user_id
         ml_user = self.db.table("tokens_ml")\
@@ -442,23 +460,29 @@ class MercadoLivreService:
             .execute()
         
         if not ml_user.data:
-            raise ValueError("ML User ID não encontrado")
+            raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
         
         ml_user_id = ml_user.data[0]["ml_user_id"]
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.ML_API_BASE}/orders/search",
-                headers={"Authorization": f"Bearer {token}"},
-                params={
-                    "seller": ml_user_id,
-                    "limit": limit,
-                    "sort": "date_desc"
-                }
-            )
-            
-            if response.status_code != 200:
-                return []
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.get(
+                    f"{self.ML_API_BASE}/orders/search",
+                    headers={"Authorization": f"Bearer {token}"},
+                    params={
+                        "seller": ml_user_id,
+                        "limit": limit,
+                        "sort": "date_desc"
+                    }
+                )
+                
+                if response.status_code == 401:
+                    raise ValueError("Token ML expirado. Reconecte-se ao Mercado Livre.")
+                
+                if response.status_code != 200:
+                    return []
+            except httpx.TimeoutException:
+                raise ValueError("Timeout ao buscar vendas do Mercado Livre")
             
             data = response.json()
             orders = data.get("results", [])
