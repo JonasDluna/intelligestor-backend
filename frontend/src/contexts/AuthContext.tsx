@@ -48,21 +48,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      // TODO: Implement actual login API call
-      // For now, mock authentication
-      const mockUser: User = {
-        id: '1',
-        name: 'Demo User',
-        email: email,
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha no login');
+      }
+
+      const data = await response.json();
+      const { access_token, user } = data;
+
+      const userData: User = {
+        id: user.id,
+        name: user.name || user.email.split('@')[0],
+        email: user.email,
         ml_connected: false,
       };
 
-      localStorage.setItem('auth_token', 'mock_token_123');
-      localStorage.setItem('user_data', JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('user_data', JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
