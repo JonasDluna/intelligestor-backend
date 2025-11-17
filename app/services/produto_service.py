@@ -18,7 +18,7 @@ class ProdutoService:
         self.db = supabase_client
         self.user_id = user_id
     
-    async def criar_produto(self, produto: ProdutoCreate) -> ProdutoResponse:
+    def criar_produto(self, produto: ProdutoCreate) -> ProdutoResponse:
         """Cria novo produto no banco"""
         data = {
             "user_id": self.user_id,
@@ -36,7 +36,7 @@ class ProdutoService:
         result = self.db.table("produtos").insert(data).execute()
         return ProdutoResponse(**result.data[0])
     
-    async def buscar_produto(self, produto_id: int) -> Optional[ProdutoResponse]:
+    def buscar_produto(self, produto_id: int) -> Optional[ProdutoResponse]:
         """Busca produto por ID"""
         result = self.db.table("produtos")\
             .select("*")\
@@ -49,7 +49,7 @@ class ProdutoService:
             return ProdutoResponse(**result.data)
         return None
     
-    async def listar_produtos(
+    def listar_produtos(
         self, 
         skip: int = 0, 
         limit: int = 100,
@@ -68,14 +68,14 @@ class ProdutoService:
         result = query.execute()
         return [ProdutoResponse(**item) for item in result.data]
     
-    async def atualizar_produto(
+    def atualizar_produto(
         self, 
         produto_id: int, 
         produto: ProdutoUpdate
     ) -> Optional[ProdutoResponse]:
         """Atualiza dados do produto"""
         # Busca produto primeiro para validar ownership
-        existing = await self.buscar_produto(produto_id)
+        existing = self.buscar_produto(produto_id)
         if not existing:
             return None
         
@@ -106,7 +106,7 @@ class ProdutoService:
         
         return ProdutoResponse(**result.data[0])
     
-    async def deletar_produto(self, produto_id: int) -> bool:
+    def deletar_produto(self, produto_id: int) -> bool:
         """Soft delete - marca produto como descontinuado"""
         result = self.db.table("produtos")\
             .update({"status": StatusProduto.DISCONTINUED.value})\
@@ -116,7 +116,7 @@ class ProdutoService:
         
         return len(result.data) > 0
     
-    async def buscar_por_sku(self, sku: str) -> Optional[ProdutoResponse]:
+    def buscar_por_sku(self, sku: str) -> Optional[ProdutoResponse]:
         """Busca produto por SKU interno"""
         result = self.db.table("produtos")\
             .select("*")\

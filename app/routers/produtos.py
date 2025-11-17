@@ -40,7 +40,7 @@ async def criar_produto(
     - **margem_minima**: Margem mínima desejada (%)
     """
     try:
-        return await service.criar_produto(produto)
+        return service.criar_produto(produto)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -51,7 +51,7 @@ async def buscar_produto(
     service: ProdutoService = Depends(get_produto_service)
 ):
     """Busca produto por ID"""
-    produto = await service.buscar_produto(produto_id)
+    produto = service.buscar_produto(produto_id)
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     return produto
@@ -71,7 +71,7 @@ async def listar_produtos(
     - **limit**: Quantos registros retornar (máx 500)
     - **status**: Filtrar por status (active, inactive, discontinued)
     """
-    return await service.listar_produtos(skip, limit, status)
+    return service.listar_produtos(skip, limit, status)
 
 
 @router.put("/{produto_id}", response_model=ProdutoResponse)
@@ -81,7 +81,7 @@ async def atualizar_produto(
     service: ProdutoService = Depends(get_produto_service)
 ):
     """Atualiza dados do produto (campos opcionais)"""
-    resultado = await service.atualizar_produto(produto_id, produto)
+    resultado = service.atualizar_produto(produto_id, produto)
     if not resultado:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     return resultado
@@ -93,7 +93,7 @@ async def deletar_produto(
     service: ProdutoService = Depends(get_produto_service)
 ):
     """Soft delete - marca produto como DISCONTINUED"""
-    sucesso = await service.deletar_produto(produto_id)
+    sucesso = service.deletar_produto(produto_id)
     if not sucesso:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
@@ -104,7 +104,7 @@ async def buscar_por_sku(
     service: ProdutoService = Depends(get_produto_service)
 ):
     """Busca produto por SKU interno"""
-    produto = await service.buscar_por_sku(sku)
+    produto = service.buscar_por_sku(sku)
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     return produto
