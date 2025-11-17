@@ -48,64 +48,23 @@ async def mercadolivre_login(user_id: str = Query("default", description="ID do 
     return RedirectResponse(url=auth_url)
 
 
-@router.api_route("/callback", methods=["GET", "POST"])
+@router.get("/callback")
 async def mercadolivre_callback(
-    request: Request,
-    code: Optional[str] = Query(None, description="Código de autorização do ML (GET)"),
-    state: Optional[str] = Query(None, description="User ID passado no state (GET)"),
+    code: Optional[str] = Query(None, description="Código de autorização do ML"),
+    state: Optional[str] = Query(None, description="User ID passado no state"),
     error: Optional[str] = Query(None, description="Erro retornado pelo ML")
 ):
     """
-    Callback do OAuth2 do Mercado Livre
+    Callback do OAuth2 do Mercado Livre (APENAS GET)
     Troca o código de autorização por access_token e salva no Supabase
-    Aceita GET e POST (ML pode usar ambos)
+    
+    IMPORTANTE: Webhooks do ML devem ir para /webhooks/ml/notifications
     """
-    print(f"[DEBUG] ============ CALLBACK RECEBIDO ============")
-    print(f"[DEBUG] Method: {request.method}")
-    print(f"[DEBUG] URL: {request.url}")
-    print(f"[DEBUG] Headers: {dict(request.headers)}")
-    print(f"[DEBUG] Query params: {dict(request.query_params)}")
-    
-    # Se for POST, tentar diferentes formatos
-    if request.method == "POST":
-        try:
-            # Tentar ler o corpo bruto
-            body = await request.body()
-            print(f"[DEBUG] Raw body (bytes): {body}")
-            print(f"[DEBUG] Raw body (decoded): {body.decode('utf-8') if body else 'empty'}")
-            
-            # Tentar form data
-            try:
-                # Re-criar request para poder ler form
-                from starlette.datastructures import FormData
-                request._body = body  # Restaurar body para leitura
-                form_data = await request.form()
-                print(f"[DEBUG] Form data: {dict(form_data)}")
-                code = code or form_data.get("code")
-                state = state or form_data.get("state")
-                error = error or form_data.get("error")
-            except Exception as e:
-                print(f"[DEBUG] Form parsing failed: {e}")
-                
-            # Tentar JSON
-            if not code and body:
-                try:
-                    import json
-                    json_data = json.loads(body)
-                    print(f"[DEBUG] JSON data: {json_data}")
-                    code = code or json_data.get("code")
-                    state = state or json_data.get("state")
-                    error = error or json_data.get("error")
-                except Exception as e:
-                    print(f"[DEBUG] JSON parsing failed: {e}")
-        except Exception as e:
-            print(f"[DEBUG] Body reading failed: {e}")
-    
-    # Valores padrão
-    state = state or "default"
-    
-    print(f"[DEBUG] Final values - Code: {code}, State: {state}, Error: {error}")
-    print(f"[DEBUG] ==========================================")
+    print(f"[DEBUG] ============ OAUTH CALLBACK RECEBIDO ============")
+    print(f"[DEBUG] Code: {code}")
+    print(f"[DEBUG] State: {state}")
+    print(f"[DEBUG] Error: {error}")
+    print(f"[DEBUG] ==================================================")
     
     if error:
         return HTMLResponse(content=f"""
