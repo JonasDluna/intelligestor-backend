@@ -72,7 +72,10 @@ async def process_notification(data: Dict[str, Any]):
         supabase = get_supabase_client()
         supabase.table("logs_sistema").insert({
             "tipo": f"ml_webhook_{topic}",
-            "dados": data,
+            "nivel": "info",
+            "origem": "ml_webhook",
+            "acao": f"Webhook recebido: {topic}",
+            "detalhes": data,
             "created_at": datetime.utcnow().isoformat()
         }).execute()
         
@@ -129,7 +132,10 @@ async def process_order_notification(resource: str, ml_user_id: str):
         # Por enquanto, apenas log
         supabase.table("logs_sistema").insert({
             "tipo": "ml_order_processed",
-            "dados": {
+            "nivel": "info",
+            "origem": "ml_webhook",
+            "acao": f"Pedido processado: {order_data.get('id')}",
+            "detalhes": {
                 "order_id": order_data.get("id"),
                 "status": order_data.get("status"),
                 "buyer_id": order_data.get("buyer", {}).get("id"),
@@ -216,7 +222,10 @@ async def process_question_notification(resource: str, ml_user_id: str):
         # Salvar pergunta
         supabase.table("logs_sistema").insert({
             "tipo": "ml_question_received",
-            "dados": {
+            "nivel": "info",
+            "origem": "ml_webhook",
+            "acao": f"Pergunta recebida: {question_data.get('id')}",
+            "detalhes": {
                 "question_id": question_data.get("id"),
                 "item_id": question_data.get("item_id"),
                 "text": question_data.get("text"),
@@ -262,7 +271,10 @@ async def process_message_notification(resource: str, ml_user_id: str):
         # Salvar mensagem
         supabase.table("logs_sistema").insert({
             "tipo": "ml_message_received",
-            "dados": {
+            "nivel": "info",
+            "origem": "ml_webhook",
+            "acao": f"Mensagem recebida: {message_data.get('id')}",
+            "detalhes": {
                 "message_id": message_data.get("id"),
                 "from_user_id": message_data.get("from", {}).get("user_id"),
                 "to_user_id": message_data.get("to", {}).get("user_id"),

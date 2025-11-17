@@ -30,12 +30,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     payload = decode_token(token)
     
     supabase = get_supabase_client()
-    result = supabase.table("users").select("*").eq("id", payload["user_id"]).maybe_single().execute()
+    result = supabase.table("usuarios").select("*").eq("id", payload["user_id"]).maybe_single().execute()
     
     if not result.data:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
     
-    if not result.data.get("ativo", True):
+    if result.data.get("status") == "suspended":
         raise HTTPException(status_code=403, detail="Usuário desativado")
     
     return result.data
