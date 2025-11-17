@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ChevronLeft,
+  Store,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,13 +26,13 @@ interface SidebarProps {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: ShoppingBag, label: 'Mercado Livre', href: '/mercado-livre' },
+  { icon: Store, label: 'E-commerce', href: '/ecommerce' },
   { icon: Package, label: 'Produtos', href: '/produtos' },
   { icon: Warehouse, label: 'Estoque', href: '/estoque' },
   { icon: TrendingUp, label: 'Vendas', href: '/vendas' },
   { icon: DollarSign, label: 'Financeiro', href: '/financeiro' },
   { icon: Users, label: 'Clientes', href: '/clientes' },
-  { icon: Settings, label: 'ConfiguraÃƒÂ§ÃƒÂµes', href: '/configuracoes' },
+  { icon: Settings, label: 'Configurações', href: '/configuracoes' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle }) => {
