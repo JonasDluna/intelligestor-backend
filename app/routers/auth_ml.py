@@ -148,7 +148,7 @@ async def mercadolivre_callback(
         
         # Salvar no Supabase usando upsert
         # Conforme docs ML: https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao
-        # Usamos upsert com on_conflict no ml_user_id (que tem constraint UNIQUE)
+        # Usamos upsert com on_conflict no user_id (requer UNIQUE constraint no banco)
         supabase = get_supabase_client()
         supabase.table("tokens_ml").upsert({
             "user_id": state,  # Nosso user_id interno
@@ -159,7 +159,7 @@ async def mercadolivre_callback(
             "nickname": user_info.get("nickname"),
             "email": user_info.get("email"),
             "site_id": user_info.get("site_id", "MLB")
-        }, on_conflict="ml_user_id").execute()
+        }, on_conflict="user_id").execute()
         
         return HTMLResponse(content=f"""
             <html>
