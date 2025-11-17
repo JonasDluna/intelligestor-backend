@@ -60,22 +60,51 @@ async def mercadolivre_callback(
     Troca o código de autorização por access_token e salva no Supabase
     Aceita GET e POST (ML pode usar ambos)
     """
-    # Se for POST, tentar pegar do form
+    print(f"[DEBUG] ============ CALLBACK RECEBIDO ============")
+    print(f"[DEBUG] Method: {request.method}")
+    print(f"[DEBUG] URL: {request.url}")
+    print(f"[DEBUG] Headers: {dict(request.headers)}")
+    print(f"[DEBUG] Query params: {dict(request.query_params)}")
+    
+    # Se for POST, tentar diferentes formatos
     if request.method == "POST":
-        form_data = await request.form()
-        code = code or form_data.get("code")
-        state = state or form_data.get("state")
-        error = error or form_data.get("error")
+        try:
+            # Tentar ler o corpo bruto
+            body = await request.body()
+            print(f"[DEBUG] Raw body (bytes): {body}")
+            print(f"[DEBUG] Raw body (decoded): {body.decode('utf-8') if body else 'empty'}")
+            
+            # Tentar form data
+            try:
+                # Re-criar request para poder ler form
+                from starlette.datastructures import FormData
+                request._body = body  # Restaurar body para leitura
+                form_data = await request.form()
+                print(f"[DEBUG] Form data: {dict(form_data)}")
+                code = code or form_data.get("code")
+                state = state or form_data.get("state")
+                error = error or form_data.get("error")
+            except Exception as e:
+                print(f"[DEBUG] Form parsing failed: {e}")
+                
+            # Tentar JSON
+            if not code and body:
+                try:
+                    import json
+                    json_data = json.loads(body)
+                    print(f"[DEBUG] JSON data: {json_data}")
+                    code = code or json_data.get("code")
+                    state = state or json_data.get("state")
+                    error = error or json_data.get("error")
+                except Exception as e:
+                    print(f"[DEBUG] JSON parsing failed: {e}")
+        except Exception as e:
+            print(f"[DEBUG] Body reading failed: {e}")
     
     # Valores padrão
     state = state or "default"
     
-    print(f"[DEBUG] ============ CALLBACK RECEBIDO ============")
-    print(f"[DEBUG] Method: {request.method}")
-    print(f"[DEBUG] URL: {request.url}")
-    print(f"[DEBUG] Code: {code}")
-    print(f"[DEBUG] State: {state}")
-    print(f"[DEBUG] Error: {error}")
+    print(f"[DEBUG] Final values - Code: {code}, State: {state}, Error: {error}")
     print(f"[DEBUG] ==========================================")
     
     if error:
