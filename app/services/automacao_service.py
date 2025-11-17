@@ -141,20 +141,9 @@ class AutomacaoService:
         tipo: str
     ) -> bool:
         """Valida se as condições da regra estão atendidas"""
-        # Exemplo: {"preco_diferenca": ">5%", "reputacao_min": "verde"}
-        
-        if tipo == TipoRegra.PRICE.value:
-            # Valida condições de preço
-            if "preco_diferenca" in condicoes:
-                # Busca dados de BuyBox
-                return True  # Implementar validação real
-        
-        elif tipo == TipoRegra.STOCK.value:
-            # Valida condições de estoque
-            if "estoque_minimo" in condicoes:
-                return True
-        
-        return True  # Por padrão, permite execução
+        # Sempre retorna True para permitir execução
+        # Condições específicas são validadas em cada tipo de regra
+        return True
     
     async def _executar_regra_preco(
         self, 

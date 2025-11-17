@@ -11,7 +11,9 @@ from app.models.schemas import (
     TipoMovimentacao
 )
 from app.services.estoque_service import EstoqueService
+from app.services.ml_sync_service import MLSyncService
 from app.config.settings import get_supabase_client
+from app.middleware.auth import get_current_user_id
 
 router = APIRouter(prefix="/estoque", tags=["Estoque"])
 
@@ -27,11 +29,16 @@ class MovimentacaoRequest(BaseModel):
     documento: Optional[str] = None
 
 
-def get_estoque_service(user_id: str = "default") -> EstoqueService:
-    """Dependency injection do service"""
-    # TODO: Pegar user_id real do JWT token
+def get_estoque_service(user_id: str = Depends(get_current_user_id)) -> EstoqueService:
+    """Dependency injection do service com autenticação JWT"""
     supabase = get_supabase_client()
     return EstoqueService(supabase, user_id)
+
+
+def get_ml_sync_service(user_id: str = Depends(get_current_user_id)) -> MLSyncService:
+    """Dependency injection do service de sincronização ML com autenticação JWT"""
+    supabase = get_supabase_client()
+    return MLSyncService(supabase, user_id)
 
 
 @router.get("/produto/{produto_id}", response_model=EstoqueResponse)
@@ -115,3 +122,69 @@ async def produtos_abaixo_minimo(
     - Planejamento de compras
     """
     return await service.produtos_abaixo_minimo()
+
+
+@router.post("/sync/produto/{produto_id}")
+async def sincronizar_estoque_produto(
+    produto_id: int,
+    nova_quantidade: int = Query(..., ge=0, description="Nova quantidade a sincronizar"),
+    service: MLSyncService = Depends(get_ml_sync_service)
+):
+    """
+    Sincroniza estoque de um produto específico com ML
+    Atualiza todos os anúncios vinculados
+    """
+    try:
+        return await service.sincronizar_estoque_produto(produto_id, nova_quantidade)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sync/todos")
+async def sincronizar_todos_estoques(
+    service: MLSyncService = Depends(get_ml_sync_service)
+):
+    """
+    Sincroniza estoque de todos os produtos com ML
+    Atualiza automaticamente baseado no estoque local
+    """
+    try:
+        return await service.sincronizar_todos_estoques()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sync/importar-ml")
+async def importar_estoque_ml(
+    service: MLSyncService = Depends(get_ml_sync_service)
+):
+    """
+    Importa quantidades do ML para o sistema local
+    Útil para sincronizar após vendas diretas no ML
+    """
+    try:
+        return await service.importar_estoque_ml()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/sync/ml/{ml_id}")
+async def buscar_estoque_ml(
+    ml_id: str,
+    service: MLSyncService = Depends(get_ml_sync_service)
+):
+    """
+    Consulta estoque de um anúncio diretamente no ML
+    """
+    try:
+        quantidade = await service.buscar_estoque_ml(ml_id)
+        return {
+            "ml_id": ml_id,
+            "quantidade": quantidade
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

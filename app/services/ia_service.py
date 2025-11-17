@@ -7,13 +7,13 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from openai import OpenAI
 from supabase import Client
-from app.config.settings import OPENAI_API_KEY, OPENAI_MODEL
+from app.config.settings import settings
 from app.models.schemas import (
     BuyBoxAnalysisResponse,
     PriceOptimizationResponse
 )
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 class IAService:
@@ -152,7 +152,7 @@ Foque em: competitividade, margem, volume de vendas e reputação."""
         ]
         
         response = self.openai.chat.completions.create(
-            model=OPENAI_MODEL,
+            model=settings.OPENAI_MODEL,
             messages=messages,
             temperature=0.7,
             max_tokens=500
@@ -235,7 +235,7 @@ Sugira um preço competitivo que maximize vendas mantendo margem saudável.
         ]
         
         response = self.openai.chat.completions.create(
-            model=OPENAI_MODEL,
+            model=settings.OPENAI_MODEL,
             messages=messages,
             temperature=0.5
         )
@@ -274,7 +274,7 @@ Sugira um preço competitivo que maximize vendas mantendo margem saudável.
 # Função legacy para compatibilidade
 def chamar_ia(messages: list, model: str | None = None) -> str:
     """Função legacy - mantida para compatibilidade com código existente"""
-    modelo = model or OPENAI_MODEL
+    modelo = model or settings.OPENAI_MODEL
     response = client.chat.completions.create(
         model=modelo,
         messages=messages,

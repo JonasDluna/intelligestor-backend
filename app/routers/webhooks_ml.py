@@ -187,17 +187,94 @@ async def process_item_notification(resource: str, ml_user_id: str):
 async def process_question_notification(resource: str, ml_user_id: str):
     """
     Processa notificação de pergunta
+    - Salva pergunta no banco
+    - Pode integrar com IA para resposta automática
     """
-    # TODO: Implementar processamento de perguntas
-    print(f"Nova pergunta recebida: {resource}")
+    supabase = get_supabase_client()
+    token_result = supabase.table("tokens_ml")\
+        .select("access_token, user_id")\
+        .eq("ml_user_id", int(ml_user_id))\
+        .maybe_single()\
+        .execute()
+    
+    if not token_result.data:
+        print(f"Token não encontrado para ml_user_id: {ml_user_id}")
+        return
+    
+    access_token = token_result.data["access_token"]
+    our_user_id = token_result.data["user_id"]
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                resource,
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            response.raise_for_status()
+            question_data = response.json()
+        
+        # Salvar pergunta
+        supabase.table("logs_sistema").insert({
+            "tipo": "ml_question_received",
+            "dados": {
+                "question_id": question_data.get("id"),
+                "item_id": question_data.get("item_id"),
+                "text": question_data.get("text"),
+                "from_user_id": question_data.get("from", {}).get("id"),
+                "status": question_data.get("status")
+            }
+        }).execute()
+        
+        print(f"Pergunta processada: {question_data.get('id')}")
+        
+    except Exception as e:
+        print(f"Erro ao processar pergunta: {e}")
 
 
 async def process_message_notification(resource: str, ml_user_id: str):
     """
     Processa notificação de mensagem
+    - Salva mensagem no banco
+    - Notifica usuário
     """
-    # TODO: Implementar processamento de mensagens
-    print(f"Nova mensagem recebida: {resource}")
+    supabase = get_supabase_client()
+    token_result = supabase.table("tokens_ml")\
+        .select("access_token, user_id")\
+        .eq("ml_user_id", int(ml_user_id))\
+        .maybe_single()\
+        .execute()
+    
+    if not token_result.data:
+        print(f"Token não encontrado para ml_user_id: {ml_user_id}")
+        return
+    
+    access_token = token_result.data["access_token"]
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                resource,
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            response.raise_for_status()
+            message_data = response.json()
+        
+        # Salvar mensagem
+        supabase.table("logs_sistema").insert({
+            "tipo": "ml_message_received",
+            "dados": {
+                "message_id": message_data.get("id"),
+                "from_user_id": message_data.get("from", {}).get("user_id"),
+                "to_user_id": message_data.get("to", {}).get("user_id"),
+                "text": message_data.get("text"),
+                "status": message_data.get("status")
+            }
+        }).execute()
+        
+        print(f"Mensagem processada: {message_data.get('id')}")
+        
+    except Exception as e:
+        print(f"Erro ao processar mensagem: {e}")
 
 
 @router.get("/test")

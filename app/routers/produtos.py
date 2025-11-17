@@ -12,6 +12,7 @@ from app.models.schemas import (
 )
 from app.services.produto_service import ProdutoService
 from app.config.settings import get_supabase_client
+from app.middleware.auth import get_current_user_id
 
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 

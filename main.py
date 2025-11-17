@@ -10,6 +10,7 @@ from app.config.settings import settings
 from app.routers import (
     ia_buybox, 
     ia_products, 
+    auth,
     auth_ml, 
     catalog,
     produtos,
@@ -39,6 +40,7 @@ app.add_middleware(
 
 # Incluir routers
 # Auth & Catalog
+app.include_router(auth.router)
 app.include_router(auth_ml.router)
 app.include_router(catalog.router)
 app.include_router(webhooks_ml.router)

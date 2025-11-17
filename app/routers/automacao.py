@@ -10,13 +10,13 @@ from app.models.schemas import (
 )
 from app.services.automacao_service import AutomacaoService
 from app.config.settings import get_supabase_client
+from app.middleware.auth import get_current_user_id
 
 router = APIRouter(prefix="/automacao", tags=["Automação"])
 
 
-def get_automacao_service(user_id: str = "default") -> AutomacaoService:
-    """Dependency injection do service"""
-    # TODO: Pegar user_id real do JWT token
+def get_automacao_service(user_id: str = Depends(get_current_user_id)) -> AutomacaoService:
+    """Dependency injection do service com autenticação JWT"""
     supabase = get_supabase_client()
     return AutomacaoService(supabase, user_id)
 
