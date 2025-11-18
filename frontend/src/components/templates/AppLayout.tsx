@@ -1,11 +1,12 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Home, Package, ShoppingCart, MessageCircle, 
   FileText, Settings, LogOut, Layers, Bell, 
   Store, Users, DollarSign, BarChart3
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,9 +14,9 @@ interface LayoutProps {
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
+  { icon: Store, label: 'E-commerce', href: '/ecommerce' },
   { icon: Package, label: 'Produtos', href: '/produtos' },
   { icon: ShoppingCart, label: 'Vendas', href: '/vendas' },
-  { icon: Store, label: 'Mercado Livre', href: '/mercado-livre' },
   { icon: Layers, label: 'Estoque', href: '/estoque' },
   { icon: Users, label: 'Clientes', href: '/clientes' },
   { icon: DollarSign, label: 'Financeiro', href: '/financeiro' },
@@ -23,6 +24,13 @@ const menuItems = [
 
 export default function AppLayout({ children }: LayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <div className="flex h-screen bg-[#F8F9FA]">
@@ -42,7 +50,7 @@ export default function AppLayout({ children }: LayoutProps) {
         <nav className="flex-1 px-4 py-6 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
             
             return (
               <Link
@@ -73,6 +81,7 @@ export default function AppLayout({ children }: LayoutProps) {
             <span className="text-sm">Settings</span>
           </Link>
           <button
+            onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-all font-medium"
           >
             <LogOut size={22} />
@@ -101,15 +110,19 @@ export default function AppLayout({ children }: LayoutProps) {
             </button>
 
             {/* User Profile */}
-            <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-xl px-3 py-2 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
-                <span className="text-white text-sm font-bold">U</span>
+            {user && (
+              <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-xl px-3 py-2 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <span className="text-white text-sm font-bold">
+                    {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-800">{user.name || 'Usuário'}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-gray-800">Admin</p>
-                <p className="text-xs text-gray-500">admin@mail.com</p>
-              </div>
-            </div>
+            )}
           </div>
         </header>
 

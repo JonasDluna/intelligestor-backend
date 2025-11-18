@@ -145,11 +145,13 @@ class MercadoLivreService:
             "sold_quantity": data["sold_quantity"],
             "status": self._mapear_status(data["status"]),
             "permalink": data["permalink"],
-            "thumbnail": data.get("thumbnail"),
             "category_id": data["category_id"],
             "listing_type_id": data["listing_type_id"],
-            "attributes": data.get("attributes", []),
-            "pictures": [p["url"] for p in data.get("pictures", [])]
+            "condition": data.get("condition"),
+            "buying_mode": data.get("buying_mode"),
+            "pictures": [p["url"] for p in data.get("pictures", [])] if data.get("pictures") else [],
+            "sync_status": "synced",
+            "last_sync_at": "now()"
         }
         
         # Upsert (insert ou update)

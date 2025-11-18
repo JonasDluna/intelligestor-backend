@@ -12,7 +12,7 @@ interface Anuncio {
   available_quantity: number;
   sold_quantity: number;
   status: string;
-  thumbnail: string;
+  pictures?: string[];
   permalink: string;
 }
 
@@ -151,9 +151,9 @@ export default function MeusAnunciosTab() {
                     <tr key={anuncio.ml_id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          {anuncio.thumbnail && (
+                          {anuncio.pictures && anuncio.pictures.length > 0 && (
                             <img
-                              src={anuncio.thumbnail}
+                              src={anuncio.pictures[0]}
                               alt={anuncio.title}
                               className="w-12 h-12 object-cover rounded border"
                             />

@@ -26,14 +26,28 @@ export default function MercadoLivrePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mlUserData, setMlUserData] = useState<{ nickname?: string; ml_user_id?: string } | null>(null);
+  const [backendVersion, setBackendVersion] = useState<string>('');
 
   useEffect(() => {
     if (user) {
       checkMLConnection();
+      checkBackendVersion();
     } else {
       setIsLoading(false);
     }
   }, [user]);
+
+  const checkBackendVersion = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/health`);
+      if (response.ok) {
+        const data = await response.json();
+        setBackendVersion(data.version);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar versão backend:', error);
+    }
+  };
 
   const checkMLConnection = async () => {
     try {
@@ -139,34 +153,46 @@ export default function MercadoLivrePage() {
             </div>
             
             {!isLoading && (
-              <div>
-                {isConnected ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200">
-                      <CheckCircle2 className="h-5 w-5" />
-                      <span className="font-medium">Conectado</span>
-                      {mlUserData?.nickname && (
-                        <span className="text-sm">@{mlUserData.nickname}</span>
-                      )}
-                    </div>
-                    <button
-                      onClick={disconnectFromML}
-                      disabled={isDisconnecting}
-                      className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors border border-red-200 disabled:opacity-50"
-                    >
-                      <LogOut className="h-5 w-5" />
-                      {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
-                    </button>
+              <div className="flex flex-col items-end gap-2">
+                {backendVersion && (
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-mono ${
+                    backendVersion === '9b23f08' 
+                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                      : 'bg-orange-50 text-orange-700 border border-orange-200'
+                  }`}>
+                    <AlertCircle className="h-3 w-3" />
+                    Backend: {backendVersion}
                   </div>
-                ) : (
-                  <button
-                    onClick={connectToML}
-                    className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
-                  >
-                    <LinkIcon className="h-5 w-5" />
-                    Conectar com Mercado Livre
-                  </button>
                 )}
+                <div>
+                  {isConnected ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span className="font-medium">Conectado</span>
+                        {mlUserData?.nickname && (
+                          <span className="text-sm">@{mlUserData.nickname}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={disconnectFromML}
+                        disabled={isDisconnecting}
+                        className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors border border-red-200 disabled:opacity-50"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={connectToML}
+                      className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                    >
+                      <LinkIcon className="h-5 w-5" />
+                      Conectar com Mercado Livre
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
