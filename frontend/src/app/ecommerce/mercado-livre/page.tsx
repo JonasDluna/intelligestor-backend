@@ -316,7 +316,7 @@ export default function MercadoLivrePage() {
           <div>
             {activeTab === 'dashboard' && <DashboardTab />}
             {activeTab === 'anuncios' && <MeusAnunciosTab />}
-            {activeTab === 'buybox' && <MonitorBuyBoxTab />}
+            {activeTab === 'buybox' && <MonitorBuyBoxTab userId={mlUserData?.ml_user_id || 'default'} />}
             {activeTab === 'perguntas' && <PerguntasTab />}
             {activeTab === 'vendas' && <VendasTab />}
           </div>

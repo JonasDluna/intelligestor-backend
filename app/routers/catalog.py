@@ -248,7 +248,7 @@ async def create_automation_rule(
 @router.get("/catalog/buybox/{item_id}")
 async def get_buybox_competition(
     item_id: str,
-    user_id: str = Query(..., description="ID do usuário")
+    user_id: str = Query(..., description="ML User ID ou UUID do usuário")
 ):
     """
     Busca dados detalhados de competição BuyBox para um item específico
@@ -265,7 +265,23 @@ async def get_buybox_competition(
     
     try:
         supabase = get_supabase_client()
-        ml_service = MercadoLivreService(supabase, user_id)
+        
+        # Verifica se user_id é ML User ID (número) ou UUID interno
+        internal_user_id = user_id
+        if user_id.isdigit():
+            # É ml_user_id, precisa buscar o user_id interno
+            result = supabase.table("tokens_ml")\
+                .select("user_id")\
+                .eq("ml_user_id", user_id)\
+                .limit(1)\
+                .execute()
+            
+            if not result.data:
+                raise ValueError(f"Usuário ML {user_id} não encontrado no sistema")
+            
+            internal_user_id = result.data[0]["user_id"]
+        
+        ml_service = MercadoLivreService(supabase, internal_user_id)
         
         buybox_data = await ml_service.buscar_price_to_win(item_id)
         
@@ -287,7 +303,7 @@ async def get_buybox_competition(
 @router.get("/catalog/competitors/{catalog_product_id}")
 async def get_product_competitors(
     catalog_product_id: str,
-    user_id: str = Query(..., description="ID do usuário")
+    user_id: str = Query(..., description="ML User ID ou UUID do usuário")
 ):
     """
     Lista todos os competidores de uma página de produto específica
@@ -303,7 +319,23 @@ async def get_product_competitors(
     
     try:
         supabase = get_supabase_client()
-        ml_service = MercadoLivreService(supabase, user_id)
+        
+        # Verifica se user_id é ML User ID (número) ou UUID interno
+        internal_user_id = user_id
+        if user_id.isdigit():
+            # É ml_user_id, precisa buscar o user_id interno
+            result = supabase.table("tokens_ml")\
+                .select("user_id")\
+                .eq("ml_user_id", user_id)\
+                .limit(1)\
+                .execute()
+            
+            if not result.data:
+                raise ValueError(f"Usuário ML {user_id} não encontrado no sistema")
+            
+            internal_user_id = result.data[0]["user_id"]
+        
+        ml_service = MercadoLivreService(supabase, internal_user_id)
         
         competitors_data = await ml_service.buscar_competidores_produto(catalog_product_id)
         
@@ -324,7 +356,7 @@ async def get_product_competitors(
 
 @router.get("/catalog/items")
 async def get_catalog_items(
-    user_id: str = Query(..., description="ID do usuário")
+    user_id: str = Query(..., description="ML User ID ou UUID do usuário")
 ):
     """
     Lista itens do catálogo do usuário para monitoramento BuyBox
@@ -336,13 +368,30 @@ async def get_catalog_items(
     
     try:
         supabase = get_supabase_client()
-        ml_service = MercadoLivreService(supabase, user_id)
+        
+        # Verifica se user_id é ML User ID (número) ou UUID interno
+        internal_user_id = user_id
+        if user_id.isdigit():
+            # É ml_user_id, precisa buscar o user_id interno
+            result = supabase.table("tokens_ml")\
+                .select("user_id")\
+                .eq("ml_user_id", user_id)\
+                .limit(1)\
+                .execute()
+            
+            if not result.data:
+                raise ValueError(f"Usuário ML {user_id} não encontrado no sistema")
+            
+            internal_user_id = result.data[0]["user_id"]
+        
+        ml_service = MercadoLivreService(supabase, internal_user_id)
         
         catalog_items = await ml_service.buscar_catalog_items()
         
         return {
             "status": "success",
             "user_id": user_id,
+            "internal_user_id": internal_user_id,
             "total_catalog_items": len(catalog_items),
             "catalog_items": catalog_items
         }

@@ -58,7 +58,11 @@ interface BuyBoxItem {
   updated_at: string;
 }
 
-export default function MonitorBuyBoxTab() {
+interface MonitorBuyBoxTabProps {
+  userId: string;
+}
+
+export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
   const [items, setItems] = useState<BuyBoxItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -73,7 +77,7 @@ export default function MonitorBuyBoxTab() {
       
       // Primeiro busca itens do catálogo com nova API
       const catalogResponse = await axiosInstance.get('/api/catalog/items', {
-        params: { user_id: 'user-temp-id' } // TODO: Usar user_id real
+        params: { user_id: userId }
       });
       
       console.log('[DEBUG] Response catalogItems:', catalogResponse.data);
@@ -90,7 +94,7 @@ export default function MonitorBuyBoxTab() {
       const buyboxPromises = catalogItems.map(async (item: any) => {
         try {
           const buyboxResponse = await axiosInstance.get(`/api/catalog/buybox/${item.ml_id}`, {
-            params: { user_id: 'user-temp-id' } // TODO: Usar user_id real
+            params: { user_id: userId }
           });
           
           if (buyboxResponse?.data?.success && buyboxResponse?.data?.buybox_data) {
