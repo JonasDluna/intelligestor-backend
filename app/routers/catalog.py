@@ -46,7 +46,7 @@ async def sync_products(user_id: int):
             
             # Preparar dados para salvar
             product_to_save = {
-                "user_id": user_id,
+                "user_id": internal_user_id,
                 "ml_id": product_data.get("id"),
                 "title": product_data.get("title"),
                 "price": product_data.get("price"),
