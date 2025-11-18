@@ -267,12 +267,23 @@ class MercadoLivreService:
         Busca itens do catálogo do ML que o usuário tem anúncios
         Retorna lista de itens para monitorar BuyBox
         """
-        token = await self._carregar_token()
-        if not token:
-            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+        print(f"[DEBUG] buscar_catalog_items iniciado para user_id={self.user_id}")
         
-        # Busca anúncios locais que têm catalog_product_id
-        anuncios = await self.listar_anuncios_locais()
+        try:
+            token = await self._carregar_token()
+            if not token:
+                print(f"[ERROR] Token não encontrado para user_id={self.user_id}")
+                raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+            
+            print(f"[DEBUG] Token carregado, buscando anúncios locais")
+            
+            # Busca anúncios locais que têm catalog_product_id
+            anuncios = await self.listar_anuncios_locais()
+        except Exception as e:
+            print(f"[ERROR] Exceção em buscar_catalog_items: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise
         
         if not anuncios:
             return []  # Sem anúncios, retorna lista vazia
@@ -409,12 +420,23 @@ class MercadoLivreService:
         Busca perguntas dos anúncios do usuário
         status: 'unanswered', 'answered', 'all'
         """
-        token = await self._carregar_token()
-        if not token:
-            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+        print(f"[DEBUG] buscar_perguntas iniciado para user_id={self.user_id}, status={status}")
         
-        # Busca ml_user_id
-        ml_user = self.db.table("tokens_ml")\
+        try:
+            token = await self._carregar_token()
+            if not token:
+                print(f"[ERROR] Token não encontrado para user_id={self.user_id}")
+                raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+            
+            print(f"[DEBUG] Token carregado, buscando ml_user_id")
+            
+            # Busca ml_user_id
+            ml_user = self.db.table("tokens_ml")
+        except Exception as e:
+            print(f"[ERROR] Exceção em buscar_perguntas: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise\
             .select("ml_user_id")\
             .eq("user_id", self.user_id)\
             .limit(1)\
@@ -481,14 +503,25 @@ class MercadoLivreService:
     
     async def buscar_vendas(self, limit: int = 50) -> List[Dict[str, Any]]:
         """
-        Busca pedidos/vendas do usuário
+        Busca vendas/pedidos do usuário
         """
-        token = await self._carregar_token()
-        if not token:
-            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+        print(f"[DEBUG] buscar_vendas iniciado para user_id={self.user_id}, limit={limit}")
         
-        # Busca ml_user_id
-        ml_user = self.db.table("tokens_ml")\
+        try:
+            token = await self._carregar_token()
+            if not token:
+                print(f"[ERROR] Token não encontrado para user_id={self.user_id}")
+                raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+            
+            print(f"[DEBUG] Token carregado, buscando ml_user_id")
+            
+            # Busca ml_user_id
+            ml_user = self.db.table("tokens_ml")
+        except Exception as e:
+            print(f"[ERROR] Exceção em buscar_vendas: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise
             .select("ml_user_id")\
             .eq("user_id", self.user_id)\
             .limit(1)\
