@@ -23,13 +23,14 @@ async def health_check():
     """
     return {
         "status": "ok",
-        "version": "b598915",  # Commit com timeout e error handling
+        "version": "4a3bd67",  # Commit com correções ML e sincronização
         "timestamp": datetime.utcnow().isoformat(),
         "changes": [
-            "Timeout 30s em todos AsyncClient",
-            "Error handling melhorado",
-            "Detecção de 401 (token expirado)",
-            "Mensagens claras ao usuário"
+            "Correção sincronização ML",
+            "Atualização schema anuncios_ml", 
+            "Suporte a pictures[] ao invés de thumbnail",
+            "Frontend exibindo dados corretamente",
+            "Deploy automático funcionando"
         ]
     }
 
