@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { TrendingUp, TrendingDown, RefreshCw, Info } from 'lucide-react';
 import api from '@/lib/api';
-import { formatCurrency } from '../../../utils/currencyUtils';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 interface BuyBoxItem {
   ml_id: string;

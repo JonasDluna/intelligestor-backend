@@ -77,13 +77,13 @@ class MercadoLivreService:
         
         ml_user_id = ml_user.data[0]["ml_user_id"]
         
-        # Busca anúncios do ML
+        # Busca anúncios do ML (TODOS os status, não apenas active)
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     f"{self.ML_API_BASE}/users/{ml_user_id}/items/search",
-                    headers={"Authorization": f"Bearer {token}"},
-                    params={"status": "active"}
+                    headers={"Authorization": f"Bearer {token}"}
+                    # Removido filtro status=active para buscar TODOS os anúncios
                 )
                 
                 if response.status_code == 401:
@@ -93,6 +93,8 @@ class MercadoLivreService:
                     raise ValueError(f"Erro ao buscar anúncios do ML: Status {response.status_code}")
                 
                 items_ids = response.json()["results"]
+                print(f"[DEBUG] Encontrados {len(items_ids)} anúncios no ML para sincronizar")
+                
         except httpx.TimeoutException:
             raise ValueError("Timeout ao buscar anúncios do Mercado Livre. Tente novamente.")
         
@@ -106,7 +108,19 @@ class MercadoLivreService:
             except Exception as e:
                 print(f"Erro ao buscar anúncio {ml_id}: {str(e)}")
                 continue
+                
+        # NOVO: Remove anúncios do banco que não existem mais no ML
+        if items_ids:
+            print(f"[DEBUG] Removendo anúncios obsoletos do banco...")
+            # Deleta anúncios que não estão na lista atual do ML
+            self.db.table("anuncios_ml")\
+                .delete()\
+                .eq("user_id", self.user_id)\
+                .not_.in_("ml_id", items_ids)\
+                .execute()
+            print(f"[DEBUG] Limpeza de anúncios obsoletos concluída")
         
+        print(f"[DEBUG] Sincronização concluída: {len(anuncios_atualizados)} anúncios atualizados")
         return anuncios_atualizados
     
     async def _buscar_detalhes_anuncio(self, ml_id: str) -> Optional[AnuncioMLResponse]:

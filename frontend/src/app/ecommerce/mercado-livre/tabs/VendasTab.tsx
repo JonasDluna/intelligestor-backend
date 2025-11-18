@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { DollarSign, Package, TrendingUp, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
-import { formatCurrency } from '../../../utils/currencyUtils';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 interface Venda {
   id: number;
@@ -198,12 +198,12 @@ export default function VendasTab() {
                       <td className="px-4 py-4 text-sm text-gray-600">ID: {venda.buyer_id}</td>
                       <td className="px-4 py-4">
                         <span className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(venda.total_amount, venda.currency_id)}
+                          {formatPrice(venda.total_amount, venda.currency_id)}
                         </span>
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-sm font-semibold text-green-600">
-                          {formatCurrency(venda.paid_amount, venda.currency_id)}
+                          {formatPrice(venda.paid_amount, venda.currency_id)}
                         </span>
                       </td>
                       <td className="px-4 py-4">{getStatusBadge(venda.status)}</td>
