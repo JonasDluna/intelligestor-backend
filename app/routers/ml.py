@@ -11,6 +11,7 @@ from app.models.schemas import AnuncioMLResponse
 from app.services.ml_service import MercadoLivreService
 from app.config.settings import get_supabase_client
 from app.middleware.auth import get_current_user_id
+from app.utils.version import get_version_info
 
 router = APIRouter(prefix="/ml", tags=["Mercado Livre"])
 
@@ -21,17 +22,12 @@ async def health_check():
     Health check - verifica versão do deploy
     NÃO requer autenticação
     """
+    version_info = get_version_info()
     return {
         "status": "ok",
-        "version": "4a3bd67",  # Commit com correções ML e sincronização
+        "version": version_info["version"],
         "timestamp": datetime.utcnow().isoformat(),
-        "changes": [
-            "Correção sincronização ML",
-            "Atualização schema anuncios_ml", 
-            "Suporte a pictures[] ao invés de thumbnail",
-            "Frontend exibindo dados corretamente",
-            "Deploy automático funcionando"
-        ]
+        "changes": version_info["changes"]
     }
 
 
