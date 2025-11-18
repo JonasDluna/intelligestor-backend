@@ -241,3 +241,113 @@ async def create_automation_rule(
         "message": "Regra de automação criada",
         "rule_type": rule_type
     }
+
+
+# ============ NOVOS ENDPOINTS BUYBOX ============
+
+@router.get("/catalog/buybox/{item_id}")
+async def get_buybox_competition(
+    item_id: str,
+    user_id: str = Query(..., description="ID do usuário")
+):
+    """
+    Busca dados detalhados de competição BuyBox para um item específico
+    
+    Retorna informações completas sobre:
+    - Status da competição (winning/competing/sharing_first_place/listed)
+    - Preço necessário para ganhar 
+    - Boosts disponíveis e ativos
+    - Dados do vendedor ganhador
+    - Motivos para não estar competindo
+    """
+    from app.services.ml_service import MercadoLivreService
+    from app.config.settings import get_supabase_client
+    
+    try:
+        supabase = get_supabase_client()
+        ml_service = MercadoLivreService(supabase, user_id)
+        
+        buybox_data = await ml_service.buscar_price_to_win(item_id)
+        
+        if not buybox_data:
+            raise HTTPException(status_code=404, detail="Item não encontrado ou não está no catálogo")
+        
+        return {
+            "status": "success",
+            "item_id": item_id,
+            "buybox_data": buybox_data
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar dados de competição: {str(e)}")
+
+
+@router.get("/catalog/competitors/{catalog_product_id}")
+async def get_product_competitors(
+    catalog_product_id: str,
+    user_id: str = Query(..., description="ID do usuário")
+):
+    """
+    Lista todos os competidores de uma página de produto específica
+    
+    Retorna:
+    - Lista completa de vendedores competindo
+    - Preços e posições de cada um
+    - Ganhador do Buy Box atual
+    - Informações de envio e reputação
+    """
+    from app.services.ml_service import MercadoLivreService
+    from app.config.settings import get_supabase_client
+    
+    try:
+        supabase = get_supabase_client()
+        ml_service = MercadoLivreService(supabase, user_id)
+        
+        competitors_data = await ml_service.buscar_competidores_produto(catalog_product_id)
+        
+        if not competitors_data:
+            raise HTTPException(status_code=404, detail="Produto não encontrado no catálogo")
+        
+        return {
+            "status": "success",
+            "catalog_product_id": catalog_product_id,
+            "competitors_data": competitors_data
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar competidores: {str(e)}")
+
+
+@router.get("/catalog/items")
+async def get_catalog_items(
+    user_id: str = Query(..., description="ID do usuário")
+):
+    """
+    Lista itens do catálogo do usuário para monitoramento BuyBox
+    
+    Retorna apenas itens que participam do catálogo (têm catalog_product_id)
+    """
+    from app.services.ml_service import MercadoLivreService
+    from app.config.settings import get_supabase_client
+    
+    try:
+        supabase = get_supabase_client()
+        ml_service = MercadoLivreService(supabase, user_id)
+        
+        catalog_items = await ml_service.buscar_catalog_items()
+        
+        return {
+            "status": "success",
+            "user_id": user_id,
+            "total_catalog_items": len(catalog_items),
+            "catalog_items": catalog_items
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar itens do catálogo: {str(e)}")
