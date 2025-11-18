@@ -3,7 +3,7 @@ Service - Mercado Livre
 Integração com API do ML: anúncios, preços, tokens
 """
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import httpx
 from supabase import Client
@@ -37,8 +37,9 @@ class MercadoLivreService:
         token_data = result.data[0]
         expires_at = datetime.fromisoformat(token_data["expires_at"])
         
-        # Token expirado?
-        if expires_at <= datetime.utcnow():
+        # Token expirado? Comparar com datetime timezone-aware
+        now_utc = datetime.now(timezone.utc)
+        if expires_at <= now_utc:
             return None
         
         self.access_token = token_data["access_token"]
