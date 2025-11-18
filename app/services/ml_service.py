@@ -256,12 +256,18 @@ class MercadoLivreService:
     
     async def listar_anuncios_locais(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Lista anúncios salvos no banco local"""
+        print(f"[DEBUG] listar_anuncios_locais para user_id={self.user_id}, limit={limit}")
+        
         result = self.db.table("anuncios_ml")\
             .select("*")\
             .eq("user_id", self.user_id)\
             .order("updated_at", desc=True)\
             .limit(limit)\
             .execute()
+        
+        print(f"[DEBUG] Encontrados {len(result.data) if result.data else 0} anúncios")
+        if result.data and len(result.data) > 0:
+            print(f"[DEBUG] Primeiro anúncio: ML_ID={result.data[0].get('ml_id')}, user_id={result.data[0].get('user_id')}")
         
         return result.data if result.data else []
     

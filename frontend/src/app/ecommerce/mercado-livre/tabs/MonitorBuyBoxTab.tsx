@@ -32,20 +32,22 @@ export default function MonitorBuyBoxTab() {
       
       // Primeiro busca itens do catálogo
       const catalogResponse = await api.mlExtended.catalogItems();
+      console.log('[DEBUG] Response catalogItems:', catalogResponse);
       
-      if (!catalogResponse.data?.success || !catalogResponse.data?.items) {
+      if (!catalogResponse?.success || !catalogResponse?.items) {
+        console.warn('[DEBUG] Catálogo vazio ou inválido:', catalogResponse);
         setItems([]);
         return;
       }
 
-      const catalogItems = catalogResponse.data.items;
+      const catalogItems = catalogResponse.items;
 
       // Para cada item, busca dados de BuyBox
       const buyboxPromises = catalogItems.map(async (item: any) => {
         try {
           const buyboxResponse = await api.mlExtended.buyboxData(item.ml_id);
-          if (buyboxResponse.data?.success && buyboxResponse.data?.data) {
-            return buyboxResponse.data.data;
+          if (buyboxResponse?.success && buyboxResponse?.data) {
+            return buyboxResponse.data;
           }
           return null;
         } catch (error) {

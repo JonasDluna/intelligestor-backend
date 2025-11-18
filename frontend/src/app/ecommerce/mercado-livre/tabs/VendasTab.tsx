@@ -28,8 +28,11 @@ export default function VendasTab() {
     try {
       setLoading(true);
       const response = await api.mlExtended.vendas(50);
-      if (response.data?.success && response.data?.vendas) {
-        setVendas(response.data.vendas);
+      console.log('[DEBUG] Response vendas:', response);
+      if (response?.success && response?.vendas) {
+        setVendas(response.vendas);
+      } else {
+        console.warn('[DEBUG] Resposta inválida vendas:', response);
       }
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);

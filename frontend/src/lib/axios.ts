@@ -67,6 +67,13 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   detail?: string;
+  // Campos específicos do ML
+  success?: boolean;
+  count?: number;
+  anuncios?: any[];
+  perguntas?: any[];
+  vendas?: any[];
+  items?: any[];
 }
 
 export default axiosInstance;
