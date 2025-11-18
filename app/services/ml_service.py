@@ -49,16 +49,27 @@ class MercadoLivreService:
         Sincroniza anúncios do ML com banco local
         Busca todos os anúncios ativos do usuário
         """
-        token = await self._carregar_token()
-        if not token:
-            raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+        print(f"[DEBUG] sincronizar_anuncios iniciado para user_id={self.user_id}")
         
-        # Busca ml_user_id
-        ml_user = self.db.table("tokens_ml")\
-            .select("ml_user_id")\
-            .eq("user_id", self.user_id)\
-            .limit(1)\
-            .execute()
+        try:
+            token = await self._carregar_token()
+            if not token:
+                print(f"[ERROR] Token não encontrado para user_id={self.user_id}")
+                raise ValueError("Token ML não encontrado ou expirado. Conecte-se ao Mercado Livre primeiro.")
+            
+            print(f"[DEBUG] Token carregado com sucesso")
+            
+            # Busca ml_user_id
+            ml_user = self.db.table("tokens_ml")\
+                .select("ml_user_id")\
+                .eq("user_id", self.user_id)\
+                .limit(1)\
+                .execute()
+        except Exception as e:
+            print(f"[ERROR] Exceção em sincronizar_anuncios: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise
         
         if not ml_user.data:
             raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")

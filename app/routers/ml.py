@@ -5,6 +5,7 @@ Endpoints para integração com API do ML
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List
 from decimal import Decimal
+from datetime import datetime
 from pydantic import BaseModel, Field
 from app.models.schemas import AnuncioMLResponse
 from app.services.ml_service import MercadoLivreService
@@ -12,6 +13,25 @@ from app.config.settings import get_supabase_client
 from app.middleware.auth import get_current_user_id
 
 router = APIRouter(prefix="/ml", tags=["Mercado Livre"])
+
+
+@router.get("/health")
+async def health_check():
+    """
+    Health check - verifica versão do deploy
+    NÃO requer autenticação
+    """
+    return {
+        "status": "ok",
+        "version": "b598915",  # Commit com timeout e error handling
+        "timestamp": datetime.utcnow().isoformat(),
+        "changes": [
+            "Timeout 30s em todos AsyncClient",
+            "Error handling melhorado",
+            "Detecção de 401 (token expirado)",
+            "Mensagens claras ao usuário"
+        ]
+    }
 
 
 # Models específicos
