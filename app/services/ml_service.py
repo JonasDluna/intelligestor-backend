@@ -441,11 +441,11 @@ class MercadoLivreService:
                 raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
             
             ml_user_id = ml_user.data[0]["ml_user_id"]
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # Busca perguntas
-            params = {"status": status} if status != "all" else {}
-            try:
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # Busca perguntas
+                params = {"status": status} if status != "all" else {}
+                
                 response = await client.get(
                     f"{self.ML_API_BASE}/questions/search",
                     headers={"Authorization": f"Bearer {token}"},
@@ -457,26 +457,24 @@ class MercadoLivreService:
                 
                 if response.status_code != 200:
                     return []
-            except httpx.TimeoutException:
-                raise ValueError("Timeout ao buscar perguntas do Mercado Livre")
-            
-            data = response.json()
-            questions = data.get("questions", [])
-            
-            # Formata dados
-            perguntas_formatadas = []
-            for q in questions:
-                perguntas_formatadas.append({
-                    "id": q["id"],
-                    "text": q["text"],
-                    "status": q["status"],
-                    "date_created": q["date_created"],
-                    "item_id": q["item_id"],
-                    "answer": q.get("answer"),
-                    "from_user_id": q.get("from", {}).get("id")
-                })
-            
-            return perguntas_formatadas
+                
+                data = response.json()
+                questions = data.get("questions", [])
+                
+                # Formata dados
+                perguntas_formatadas = []
+                for q in questions:
+                    perguntas_formatadas.append({
+                        "id": q["id"],
+                        "text": q["text"],
+                        "status": q["status"],
+                        "date_created": q["date_created"],
+                        "item_id": q["item_id"],
+                        "answer": q.get("answer"),
+                        "from_user_id": q.get("from", {}).get("id")
+                    })
+                
+                return perguntas_formatadas
         except Exception as e:
             print(f"[ERROR] Exceção em buscar_perguntas: {type(e).__name__}: {str(e)}")
             import traceback
@@ -523,12 +521,11 @@ class MercadoLivreService:
                 .execute()
             
             if not ml_user.data:
-            raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
-        
-        ml_user_id = ml_user.data[0]["ml_user_id"]
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
+                raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
+            
+            ml_user_id = ml_user.data[0]["ml_user_id"]
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     f"{self.ML_API_BASE}/orders/search",
                     headers={"Authorization": f"Bearer {token}"},
@@ -544,27 +541,25 @@ class MercadoLivreService:
                 
                 if response.status_code != 200:
                     return []
-            except httpx.TimeoutException:
-                raise ValueError("Timeout ao buscar vendas do Mercado Livre")
-            
-            data = response.json()
-            orders = data.get("results", [])
-            
-            # Formata vendas
-            vendas_formatadas = []
-            for order in orders:
-                vendas_formatadas.append({
-                    "id": order["id"],
-                    "date_created": order["date_created"],
-                    "status": order["status"],
-                    "total_amount": order["total_amount"],
-                    "paid_amount": order.get("paid_amount", 0),
-                    "currency_id": order["currency_id"],
-                    "buyer_id": order.get("buyer", {}).get("id"),
-                    "items": order.get("order_items", [])
-                })
-            
-            return vendas_formatadas
+                
+                data = response.json()
+                orders = data.get("results", [])
+                
+                # Formata vendas
+                vendas_formatadas = []
+                for order in orders:
+                    vendas_formatadas.append({
+                        "id": order["id"],
+                        "date_created": order["date_created"],
+                        "status": order["status"],
+                        "total_amount": order["total_amount"],
+                        "paid_amount": order.get("paid_amount", 0),
+                        "currency_id": order["currency_id"],
+                        "buyer_id": order.get("buyer", {}).get("id"),
+                        "items": order.get("order_items", [])
+                    })
+                
+                return vendas_formatadas
         except Exception as e:
             print(f"[ERROR] Exceção em buscar_vendas: {type(e).__name__}: {str(e)}")
             import traceback
