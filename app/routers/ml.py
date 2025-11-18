@@ -58,14 +58,23 @@ async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
     - nickname: str - Nome no ML (se conectado)
     """
     try:
+        print(f"[DEBUG] Verificando status ML para user_id: {user_id}")
         supabase = get_supabase_client()
+        
         result = supabase.table("tokens_ml")\
-            .select("ml_user_id, nickname, expires_at")\
+            .select("ml_user_id, nickname, expires_at, access_token")\
             .eq("user_id", user_id)\
             .maybe_single()\
             .execute()
         
+        print(f"[DEBUG] Query result: {result.data is not None}")
+        
         if result.data:
+            has_token = bool(result.data.get("access_token"))
+            print(f"[DEBUG] Token exists: {has_token}")
+            print(f"[DEBUG] Nickname: {result.data.get('nickname')}")
+            print(f"[DEBUG] ML User ID: {result.data.get('ml_user_id')}")
+            
             return {
                 "connected": True,
                 "ml_user_id": result.data.get("ml_user_id"),
@@ -73,6 +82,7 @@ async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
                 "expires_at": result.data.get("expires_at")
             }
         else:
+            print(f"[DEBUG] Nenhum token encontrado para user_id: {user_id}")
             return {
                 "connected": False,
                 "ml_user_id": None,
@@ -262,13 +272,17 @@ async def listar_anuncios(
     Retorna anúncios já sincronizados. Use /sincronizar para atualizar.
     """
     try:
+        print(f"[DEBUG] Listando anúncios para user_id: {service.user_id}")
         anuncios = await service.listar_anuncios_locais(limit=limit)
+        print(f"[DEBUG] Encontrados {len(anuncios)} anúncios")
+        
         return {
             "success": True,
             "count": len(anuncios),
             "anuncios": anuncios
         }
     except Exception as e:
+        print(f"[ERROR] Erro ao listar anúncios: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao listar anúncios: {str(e)}")
 
 

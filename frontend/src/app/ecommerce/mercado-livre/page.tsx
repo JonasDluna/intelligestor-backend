@@ -35,6 +35,20 @@ export default function MercadoLivrePage() {
     } else {
       setIsLoading(false);
     }
+
+    // Listener para mensagens do popup de autenticação
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'ML_AUTH_SUCCESS') {
+        setTimeout(() => checkMLConnection(), 1000);
+      } else if (event.data.type === 'ML_AUTH_ERROR') {
+        alert('❌ Erro na autenticação: ' + event.data.error);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [user]);
 
   const checkBackendVersion = async () => {
@@ -52,8 +66,10 @@ export default function MercadoLivrePage() {
   const checkMLConnection = async () => {
     try {
       const token = localStorage.getItem('auth_token');
+      console.log('[DEBUG] Verificando conexão ML, token:', token ? 'existe' : 'não existe');
       
       if (!token) {
+        console.log('[DEBUG] Sem token, definindo como desconectado');
         setIsConnected(false);
         setIsLoading(false);
         return;
@@ -65,19 +81,32 @@ export default function MercadoLivrePage() {
         }
       });
       
+      console.log('[DEBUG] Status response:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('[DEBUG] Status data:', data);
+        
         setIsConnected(data.connected);
         if (data.connected) {
           setMlUserData({
             nickname: data.nickname,
             ml_user_id: data.ml_user_id
           });
+          console.log('[DEBUG] Conectado como:', data.nickname);
+        } else {
+          console.log('[DEBUG] ML não conectado');
+          setMlUserData(null);
         }
+      } else {
+        console.log('[DEBUG] Erro na resposta:', response.status);
+        setIsConnected(false);
+        setMlUserData(null);
       }
     } catch (error) {
       console.error('Erro ao verificar conexão ML:', error);
       setIsConnected(false);
+      setMlUserData(null);
     } finally {
       setIsLoading(false);
     }
@@ -86,11 +115,33 @@ export default function MercadoLivrePage() {
   const connectToML = () => {
     if (user?.id) {
       const authUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/ml/login?user_id=${user.id}`;
-      window.open(authUrl, '_blank');
       
+      // Criar janela popup para autenticação
+      const popup = window.open(
+        authUrl, 
+        'ml-auth', 
+        'width=600,height=700,left=' + (window.screen.width / 2 - 300) + ',top=' + (window.screen.height / 2 - 350)
+      );
+      
+      // Monitorar a janela popup
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed);
+          // Aguardar um pouco e verificar conexão
+          setTimeout(() => {
+            checkMLConnection();
+          }, 2000);
+        }
+      }, 1000);
+      
+      // Fallback: verificar após 30 segundos mesmo se a janela não fechar
       setTimeout(() => {
+        clearInterval(checkClosed);
+        if (!popup?.closed) {
+          popup?.close();
+        }
         checkMLConnection();
-      }, 5000);
+      }, 30000);
     }
   };
 
@@ -113,7 +164,10 @@ export default function MercadoLivrePage() {
       if (response.ok) {
         setIsConnected(false);
         setMlUserData(null);
-        alert('✅ Desconectado do Mercado Livre com sucesso!');
+        // Forçar atualização da página automaticamente
+        window.location.reload();
+      } else {
+        alert('❌ Erro ao desconectar. Tente novamente.');
       }
     } catch (error) {
       console.error('Erro ao desconectar ML:', error);

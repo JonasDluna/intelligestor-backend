@@ -33,13 +33,26 @@ export default function MeusAnunciosTab() {
       setLoading(true);
       const response = await api.mlExtended.listarAnuncios(100);
       console.log('[DEBUG] Response listarAnuncios:', response);
-      if (response?.success && response?.anuncios) {
-        setAnuncios(response.anuncios);
+      
+      if (response?.success && Array.isArray(response?.anuncios)) {
+        // Validar e filtrar anúncios com dados obrigatórios
+        const validAnuncios = response.anuncios.filter(anuncio => {
+          const isValid = anuncio.ml_id && anuncio.title;
+          if (!isValid) {
+            console.warn('[DEBUG] Anúncio inválido:', anuncio);
+          }
+          return isValid;
+        });
+        
+        console.log('[DEBUG] Anúncios válidos:', validAnuncios.length, 'de', response.anuncios.length);
+        setAnuncios(validAnuncios);
       } else {
         console.warn('[DEBUG] Resposta inválida:', response);
+        setAnuncios([]);
       }
     } catch (error) {
       console.error('Erro ao carregar anúncios:', error);
+      setAnuncios([]);
     } finally {
       setLoading(false);
     }
