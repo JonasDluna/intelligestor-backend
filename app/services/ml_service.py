@@ -279,53 +279,53 @@ class MercadoLivreService:
             
             # Busca anúncios locais que têm catalog_product_id
             anuncios = await self.listar_anuncios_locais()
+            
+            if not anuncios:
+                return []  # Sem anúncios, retorna lista vazia
+            
+            items_catalog = []
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                for anuncio in anuncios:
+                    ml_id = anuncio.get("ml_id")
+                    if not ml_id:
+                        continue
+                    
+                    try:
+                        # Busca detalhes do item
+                        response = await client.get(
+                            f"{self.ML_API_BASE}/items/{ml_id}",
+                            headers={"Authorization": f"Bearer {token}"}
+                        )
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            catalog_product_id = data.get("catalog_product_id")
+                            
+                            if catalog_product_id:
+                                items_catalog.append({
+                                    "ml_id": ml_id,
+                                    "title": data["title"],
+                                    "price": data["price"],
+                                    "catalog_product_id": catalog_product_id,
+                                    "thumbnail": data.get("thumbnail"),
+                                    "permalink": data["permalink"],
+                                    "attributes": data.get("attributes", [])
+                                })
+                        elif response.status_code == 401:
+                            raise ValueError("Token ML expirado. Reconecte-se ao Mercado Livre.")
+                    except httpx.TimeoutException:
+                        print(f"Timeout ao buscar item {ml_id}")
+                        continue
+                    except Exception as e:
+                        print(f"Erro ao buscar item {ml_id}: {str(e)}")
+                        continue
+            
+            return items_catalog
         except Exception as e:
             print(f"[ERROR] Exceção em buscar_catalog_items: {type(e).__name__}: {str(e)}")
             import traceback
             print(f"[ERROR] Traceback: {traceback.format_exc()}")
             raise
-        
-        if not anuncios:
-            return []  # Sem anúncios, retorna lista vazia
-        
-        items_catalog = []
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for anuncio in anuncios:
-                ml_id = anuncio.get("ml_id")
-                if not ml_id:
-                    continue
-                
-                try:
-                    # Busca detalhes do item
-                    response = await client.get(
-                        f"{self.ML_API_BASE}/items/{ml_id}",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        catalog_product_id = data.get("catalog_product_id")
-                        
-                        if catalog_product_id:
-                            items_catalog.append({
-                                "ml_id": ml_id,
-                                "title": data["title"],
-                                "price": data["price"],
-                                "catalog_product_id": catalog_product_id,
-                                "thumbnail": data.get("thumbnail"),
-                                "permalink": data["permalink"],
-                                "attributes": data.get("attributes", [])
-                            })
-                    elif response.status_code == 401:
-                        raise ValueError("Token ML expirado. Reconecte-se ao Mercado Livre.")
-                except httpx.TimeoutException:
-                    print(f"Timeout ao buscar item {ml_id}")
-                    continue
-                except Exception as e:
-                    print(f"Erro ao buscar item {ml_id}: {str(e)}")
-                    continue
-        
-        return items_catalog
     
     async def buscar_buybox_data(self, item_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -431,21 +431,16 @@ class MercadoLivreService:
             print(f"[DEBUG] Token carregado, buscando ml_user_id")
             
             # Busca ml_user_id
-            ml_user = self.db.table("tokens_ml")
-        except Exception as e:
-            print(f"[ERROR] Exceção em buscar_perguntas: {type(e).__name__}: {str(e)}")
-            import traceback
-            print(f"[ERROR] Traceback: {traceback.format_exc()}")
-            raise\
-            .select("ml_user_id")\
-            .eq("user_id", self.user_id)\
-            .limit(1)\
-            .execute()
-        
-        if not ml_user.data:
-            raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
-        
-        ml_user_id = ml_user.data[0]["ml_user_id"]
+            ml_user = self.db.table("tokens_ml")\
+                .select("ml_user_id")\
+                .eq("user_id", self.user_id)\
+                .limit(1)\
+                .execute()
+            
+            if not ml_user.data:
+                raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
+            
+            ml_user_id = ml_user.data[0]["ml_user_id"]
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Busca perguntas
@@ -482,6 +477,11 @@ class MercadoLivreService:
                 })
             
             return perguntas_formatadas
+        except Exception as e:
+            print(f"[ERROR] Exceção em buscar_perguntas: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise
     
     async def responder_pergunta(self, question_id: int, resposta: str) -> bool:
         """Responde uma pergunta no ML"""
@@ -516,18 +516,13 @@ class MercadoLivreService:
             print(f"[DEBUG] Token carregado, buscando ml_user_id")
             
             # Busca ml_user_id
-            ml_user = self.db.table("tokens_ml")
-        except Exception as e:
-            print(f"[ERROR] Exceção em buscar_vendas: {type(e).__name__}: {str(e)}")
-            import traceback
-            print(f"[ERROR] Traceback: {traceback.format_exc()}")
-            raise
-            .select("ml_user_id")\
-            .eq("user_id", self.user_id)\
-            .limit(1)\
-            .execute()
-        
-        if not ml_user.data:
+            ml_user = self.db.table("tokens_ml")\
+                .select("ml_user_id")\
+                .eq("user_id", self.user_id)\
+                .limit(1)\
+                .execute()
+            
+            if not ml_user.data:
             raise ValueError("ML User ID não encontrado. Conecte-se ao Mercado Livre primeiro.")
         
         ml_user_id = ml_user.data[0]["ml_user_id"]
@@ -570,3 +565,8 @@ class MercadoLivreService:
                 })
             
             return vendas_formatadas
+        except Exception as e:
+            print(f"[ERROR] Exceção em buscar_vendas: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            raise
