@@ -149,7 +149,7 @@ class MercadoLivreService:
             "listing_type_id": data["listing_type_id"],
             "condition": data.get("condition"),
             "buying_mode": data.get("buying_mode"),
-            "pictures": [p["url"] for p in data.get("pictures", [])] if data.get("pictures") else [],
+            "pictures": [p["url"].replace("http://", "https://") for p in data.get("pictures", [])] if data.get("pictures") else [],
             "sync_status": "synced",
             "last_sync_at": "now()"
         }

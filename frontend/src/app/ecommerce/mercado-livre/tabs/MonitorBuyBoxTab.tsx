@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { TrendingUp, TrendingDown, RefreshCw, Info } from 'lucide-react';
 import api from '@/lib/api';
+import { formatCurrency } from '../../../utils/currencyUtils';
 
 interface BuyBoxItem {
   ml_id: string;
@@ -200,18 +201,18 @@ export default function MonitorBuyBoxTab() {
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-sm font-semibold text-gray-900">
-                          R$ {item.my_price.toFixed(2)}
+                          {formatCurrency(item.my_price)}
                         </span>
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-sm font-semibold text-blue-600">
-                          {item.champion_price ? `R$ ${item.champion_price.toFixed(2)}` : '-'}
+                          {item.champion_price ? formatCurrency(item.champion_price) : '-'}
                         </span>
                       </td>
                       <td className="px-4 py-4">
                         {item.champion_price ? (
                           <span className={`text-sm font-semibold ${item.difference_percent > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {item.difference_percent > 0 ? '+' : ''}{item.difference_percent.toFixed(1)}%
+                            {item.difference_percent > 0 ? '+' : ''}{(item.difference_percent || 0).toFixed(1)}%
                           </span>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>

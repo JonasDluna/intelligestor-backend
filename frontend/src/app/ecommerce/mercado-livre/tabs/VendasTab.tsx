@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { DollarSign, Package, TrendingUp, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
+import { formatCurrency } from '../../../utils/currencyUtils';
 
 interface Venda {
   id: number;
@@ -74,11 +75,11 @@ export default function VendasTab() {
     return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{label}</span>;
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
+  const formatPrice = (amount: number, currency: string = 'BRL') => {
     if (currency === 'BRL') {
-      return `R$ ${amount.toFixed(2)}`;
+      return formatCurrency(amount);
     }
-    return `${currency} ${amount.toFixed(2)}`;
+    return `${currency} ${formatCurrency(amount).replace('R$ ', '')}`;
   };
 
   const formatDate = (isoDate: string) => {
@@ -113,7 +114,7 @@ export default function VendasTab() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600 mb-1">Faturamento Hoje</p>
-                <p className="text-2xl font-bold text-blue-900">R$ {faturamentoHoje.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-blue-900">{formatCurrency(faturamentoHoje)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-400" />
             </div>

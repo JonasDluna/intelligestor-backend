@@ -67,9 +67,10 @@ async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
             .maybe_single()\
             .execute()
         
-        print(f"[DEBUG] Query result: {result.data is not None}")
+        print(f"[DEBUG] Query result exists: {result is not None}")
+        print(f"[DEBUG] Query data exists: {result.data is not None if result else False}")
         
-        if result.data:
+        if result and result.data:
             has_token = bool(result.data.get("access_token"))
             print(f"[DEBUG] Token exists: {has_token}")
             print(f"[DEBUG] Nickname: {result.data.get('nickname')}")
@@ -101,6 +102,7 @@ async def desconectar_ml(user_id: str = Depends(get_current_user_id)):
     O usuário precisará reconectar para usar funcionalidades ML novamente.
     """
     try:
+        print(f"[DEBUG] Desconectando ML para user_id: {user_id}")
         supabase = get_supabase_client()
         
         # Deleta o token do usuário
@@ -109,14 +111,7 @@ async def desconectar_ml(user_id: str = Depends(get_current_user_id)):
             .eq("user_id", user_id)\
             .execute()
         
-        # Log da desconexão
-        supabase.table("logs_sistema").insert({
-            "user_id": user_id,
-            "nivel": "info",
-            "origem": "ml_disconnect",
-            "acao": "Usuario desconectou conta ML",
-            "detalhes": {"timestamp": "now"}
-        }).execute()
+        print(f"[DEBUG] Token ML removido, result: {len(result.data) if result.data else 0}")
         
         return {
             "success": True,
