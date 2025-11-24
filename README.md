@@ -1,216 +1,201 @@
 # Intelligestor Backend
 
-Sistema de gestão para integração com Mercado Livre - Backend em Python com FastAPI.
+Sistema de gestão e análise competitiva para Mercado Livre com integração de IA.
 
-## 🚀 Stack Tecnológica
+## 🚀 Estrutura do Projeto
 
-- **Backend**: Python 3.11+ com FastAPI
-- **Banco de Dados**: Supabase (PostgreSQL)
-- **IA**: OpenAI GPT-4
-- **Deploy**: Render + Vercel
-- **Integração**: Mercado Livre API OAuth2
-- **CI/CD**: GitHub Actions
+```
+intelligestor-backend-main/
+├── app/                          # Aplicação principal
+│   ├── config/                   # Configurações (settings, database)
+│   ├── middleware/               # Middlewares (auth, CORS, etc)
+│   ├── models/                   # Modelos de dados
+│   ├── routers/                  # Endpoints da API
+│   │   ├── auth.py              # Autenticação
+│   │   ├── auth_ml.py           # OAuth Mercado Livre
+│   │   ├── catalog.py           # Catálogo de produtos
+│   │   ├── ml_real.py           # API Real do Mercado Livre
+│   │   ├── ia_buybox.py         # Análise IA BuyBox
+│   │   ├── ai_analysis.py       # Análises de IA
+│   │   ├── produtos.py          # Gestão de produtos
+│   │   ├── estoque.py           # Gestão de estoque
+│   │   ├── automacao.py         # Automações
+│   │   └── webhooks_ml.py       # Webhooks do ML
+│   ├── services/                 # Serviços de negócio
+│   └── utils/                    # Utilitários
+├── api/                          # API routes (Vercel)
+│   └── index.py
+├── frontend/                     # Frontend Next.js
+│   ├── src/
+│   │   ├── app/                 # Pages (App Router)
+│   │   ├── components/          # Componentes React
+│   │   └── services/            # Serviços API
+│   └── public/
+├── tests/                        # Testes automatizados
+├── main.py                       # Aplicação FastAPI principal
+├── start_server.py              # Script de inicialização
+├── requirements.txt             # Dependências Python
+├── render.yaml                  # Config deploy Render
+├── vercel.json                  # Config deploy Vercel
+└── README.md
 
-## 📋 Funcionalidades
-
-- ✅ Autenticação OAuth2 com Mercado Livre
-- ✅ Sincronização de produtos
-- ✅ Comparação de catálogo
-- ✅ Monitoramento de preços
-- ✅ Automações de regras
-- ✅ Detector de Buy Box
-- ✅ Predição de preços com IA
-
-## 🛠️ Configuração Local
-
-### 1. Clonar o repositório
-
-```bash
-git clone https://github.com/SEU_USUARIO/pipeline-production-v5.git
-cd pipeline-production-v5/intelligestor-backend-main
 ```
 
-### 2. Criar ambiente virtual
+## 🛠️ Tecnologias
 
-```bash
-python -m venv venv
-```
+### Backend
+- **FastAPI** - Framework web Python
+- **Supabase** - Database PostgreSQL + Auth
+- **OpenAI API** - Análises de IA
+- **Mercado Livre API** - Integração oficial
 
-**Windows:**
+### Frontend
+- **Next.js 15** - Framework React
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **Shadcn/ui** - Componentes UI
+
+## 📋 Pré-requisitos
+
+- Python 3.11+
+- Node.js 18+
+- Conta Supabase
+- Conta OpenAI
+- App Mercado Livre
+
+## 🔧 Instalação
+
+### Backend
+
 ```powershell
-.\venv\Scripts\activate
-```
+# Clone o repositório
+git clone https://github.com/JonasDluna/intelligestor-backend.git
+cd intelligestor-backend-main
 
-**Linux/Mac:**
-```bash
-source venv/bin/activate
-```
+# Criar ambiente virtual
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 
-### 3. Instalar dependências
-
-```bash
+# Instalar dependências
 pip install -r requirements.txt
-```
 
-### 4. Configurar variáveis de ambiente
-
-Copie o arquivo `.env.example` para `.env` e preencha com suas credenciais:
-
-```bash
-cp .env.example .env
-```
-
-Edite o arquivo `.env` com suas chaves:
-
-```env
-# Supabase
-SUPABASE_URL=sua_url_aqui
-SUPABASE_ANON_KEY=sua_chave_aqui
-SUPABASE_SERVICE_ROLE_KEY=sua_chave_aqui
-
-# OpenAI
-OPENAI_API_KEY=sua_chave_aqui
-OPENAI_MODEL=gpt-4
-
-# Mercado Livre
+# Configurar variáveis de ambiente (.env)
+SUPABASE_URL=sua_url
+SUPABASE_KEY=sua_key
+OPENAI_API_KEY=sua_key
 ML_CLIENT_ID=seu_client_id
-ML_CLIENT_SECRET=seu_client_secret
+ML_CLIENT_SECRET=seu_secret
 ML_REDIRECT_URI=http://localhost:8000/auth/ml/callback
+
+# Iniciar servidor
+python start_server.py
 ```
 
-### 5. Configurar banco de dados
+### Frontend
 
-Execute o script SQL no Supabase:
+```powershell
+cd frontend
 
-```bash
-# Acesse o Supabase SQL Editor e execute:
-# database_schema.sql
+# Instalar dependências
+npm install
+
+# Configurar .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Iniciar desenvolvimento
+npm run dev
 ```
-
-### 6. Executar localmente
-
-```bash
-uvicorn main:app --reload
-```
-
-Acesse: http://localhost:8000
-
-## 📚 Documentação da API
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
 
 ## 🌐 Endpoints Principais
 
 ### Autenticação
-- `GET /auth/ml/login` - Iniciar OAuth2 do ML
-- `GET /auth/ml/callback` - Callback OAuth2
-- `POST /auth/ml/refresh` - Renovar token
-- `GET /auth/ml/status/{user_id}` - Status da autenticação
+- `GET /auth/ml/login` - Login OAuth ML
+- `GET /auth/ml/callback` - Callback OAuth
+- `POST /auth/logout` - Logout
 
-### Produtos
-- `GET /api/products/` - Listar produtos
-- `POST /api/products/sync` - Sincronizar com ML
+### Mercado Livre (Real API)
+- `GET /ml/buybox/analysis/{item_id}` - Análise BuyBox
+- `GET /ml/competitors/{item_id}` - Competidores
+- `GET /ml/price-to-win/{item_id}` - Preço para ganhar
 
-### Buy Box
-- `POST /api/buybox/analyze` - Analisar Buy Box
+### IA e Análises
+- `POST /api/ai/analyze` - Análise IA
+- `GET /api/buybox/items` - Itens BuyBox
+- `GET /api/products` - Produtos
 
-## 🚀 Deploy no Render
+### Catálogo
+- `GET /api/catalog/search` - Buscar catálogo
+- `GET /api/catalog/product/{id}` - Detalhes produto
 
-### 1. Conectar repositório GitHub
+## 🚀 Deploy
 
-1. Acesse [Render Dashboard](https://dashboard.render.com)
-2. New → Web Service
-3. Conecte seu repositório GitHub
-
-### 2. Configurar Service
-
-- **Name**: intelligestor-backend
-- **Runtime**: Python 3
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### 3. Adicionar variáveis de ambiente
-
-No Render Dashboard, adicione todas as variáveis do `.env`:
-
-- SUPABASE_URL
-- SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- OPENAI_API_KEY
-- ML_CLIENT_ID
-- ML_CLIENT_SECRET
-- ML_REDIRECT_URI (https://intelligestor-backend.onrender.com/auth/ml/callback)
-- SECRET_KEY
-
-### 4. Deploy automático
-
-Toda vez que você fizer push para a branch `main`, o Render irá:
-1. Detectar mudanças
-2. Executar build
-3. Fazer deploy automático
-
-## 📊 Estrutura do Banco de Dados (Supabase)
-
-```
-tokens_ml              - Tokens OAuth2 do Mercado Livre
-produtos               - Produtos sincronizados
-anuncios              - Anúncios publicados
-catalogo              - Catálogo do ML
-precos_concorrentes   - Preços de concorrentes
-logs_monitoramento    - Logs de automações
-usuarios              - Dados dos usuários
+### Backend (Render)
+```bash
+# Conectar repositório GitHub
+# Configurar variáveis de ambiente
+# Deploy automático via render.yaml
 ```
 
-## 🔐 Segurança
+### Frontend (Vercel)
+```powershell
+cd frontend
+npm run build
+vercel --prod
+```
 
-- ✅ Variáveis de ambiente protegidas
-- ✅ `.env` no `.gitignore`
-- ✅ CORS configurado
-- ✅ JWT para autenticação
-- ✅ RLS (Row Level Security) no Supabase
+## 📊 Funcionalidades
 
-## 📝 TODO
+### ✅ Implementado
+- Autenticação OAuth Mercado Livre
+- Análise BuyBox em tempo real
+- Análise de competidores
+- Precificação inteligente com IA
+- Dashboard de produtos
+- Sistema de automações
+- Webhooks Mercado Livre
 
-- [ ] Implementar rotas de produtos completas
-- [ ] Adicionar webhook do Mercado Livre
-- [ ] Sistema de notificações
-- [ ] Dashboard de métricas
-- [ ] Testes automatizados
-- [ ] CI/CD com GitHub Actions
+### 🔄 Em Desenvolvimento
+- Auto-ajuste de preços
+- Alertas em tempo real
+- Análises preditivas avançadas
 
-## 🤝 Contribuindo
+## 📝 Scripts Úteis
 
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+```powershell
+# Testar integração completa
+python test_integration_complete.py
+
+# Iniciar servidor de desenvolvimento
+python start_server.py
+
+# Build frontend
+cd frontend
+npm run build
+```
+
+## 🐛 Troubleshooting
+
+### Erro de conexão Supabase
+- Verificar SUPABASE_URL e SUPABASE_KEY no .env
+- Confirmar que RLS está configurado corretamente
+
+### Erro OAuth ML
+- Validar ML_CLIENT_ID e ML_CLIENT_SECRET
+- Verificar URL de callback no painel do ML
+
+### Frontend não conecta ao backend
+- Confirmar NEXT_PUBLIC_API_URL
+- Verificar CORS no backend (main.py)
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT.
+Projeto privado - Todos os direitos reservados.
 
-## 🔗 Links Úteis
+## 👥 Contato
 
-- [Documentação FastAPI](https://fastapi.tiangolo.com/)
-- [Supabase Docs](https://supabase.com/docs)
-- [Mercado Livre API](https://developers.mercadolivre.com.br/)
-- [OpenAI API](https://platform.openai.com/docs)
-- [Render Docs](https://render.com/docs)
-- [Vercel Docs](https://vercel.com/docs)
+Para suporte e dúvidas, entre em contato através do GitHub.
 
-## 📞 Suporte
+---
 
-### Render
-- Service ID: srv-d4bi0h7diees73ajfp3g
-- URL: https://intelligestor-backend.onrender.com
-
-### Vercel
-- Project ID: prj_IK70OvzluVgwj61IWmuCL6g0kU5k
-- URL: https://intelligestor-backend-rlyo.vercel.app
-- Repository: https://github.com/JonasDluna/intelligestor-backend
-
-### Supabase
-- URL: https://wsluajpeibcfeerbxqiz.supabase.co
-
+**Versão**: 1.0.0  
+**Última atualização**: Novembro 2025

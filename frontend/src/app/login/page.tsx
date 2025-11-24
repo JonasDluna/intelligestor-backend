@@ -27,7 +27,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, senha);
-      router.push('/dashboard');
+      router.push('/ecommerce');
     } catch (err: unknown) {
       setError('Erro ao fazer login. Verifique suas credenciais.');
     } finally {

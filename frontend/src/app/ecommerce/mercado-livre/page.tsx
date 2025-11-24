@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/templates/AppLayout';
+import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { 
   LayoutDashboard, Package, Target, MessageSquare, ShoppingCart, 
-  ArrowLeft, CheckCircle2, LogOut, Link as LinkIcon, AlertCircle 
+  ArrowLeft, CheckCircle2, LogOut, Link as LinkIcon, AlertCircle,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -16,10 +18,19 @@ import MeusAnunciosTab from './tabs/MeusAnunciosTab';
 import MonitorBuyBoxTab from './tabs/MonitorBuyBoxTab';
 import PerguntasTab from './tabs/PerguntasTab';
 import VendasTab from './tabs/VendasTab';
+import CatalogoTab from './tabs/CatalogoTab';
 
-type TabType = 'dashboard' | 'anuncios' | 'buybox' | 'perguntas' | 'vendas';
+type TabType = 'dashboard' | 'anuncios' | 'catalogo' | 'buybox' | 'perguntas' | 'vendas';
 
 export default function MercadoLivrePage() {
+  return (
+    <ProtectedRoute>
+      <MercadoLivreContent />
+    </ProtectedRoute>
+  );
+}
+
+function MercadoLivreContent() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isConnected, setIsConnected] = useState(false);
@@ -180,6 +191,7 @@ export default function MercadoLivrePage() {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'anuncios', label: 'Meus Anúncios', icon: Package },
+    { id: 'catalogo', label: 'Catálogo ML', icon: BookOpen },
     { id: 'buybox', label: 'Monitor BuyBox', icon: Target },
     { id: 'perguntas', label: 'Perguntas', icon: MessageSquare },
     { id: 'vendas', label: 'Vendas', icon: ShoppingCart }
@@ -316,6 +328,7 @@ export default function MercadoLivrePage() {
           <div>
             {activeTab === 'dashboard' && <DashboardTab />}
             {activeTab === 'anuncios' && <MeusAnunciosTab />}
+            {activeTab === 'catalogo' && <CatalogoTab userId={mlUserData?.ml_user_id || ''} />}
             {activeTab === 'buybox' && <MonitorBuyBoxTab userId={mlUserData?.ml_user_id || 'default'} />}
             {activeTab === 'perguntas' && <PerguntasTab />}
             {activeTab === 'vendas' && <VendasTab />}

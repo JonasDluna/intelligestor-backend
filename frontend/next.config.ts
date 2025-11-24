@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: http:",
               "font-src 'self'",
-              "connect-src 'self' https://intelligestor-backend.onrender.com",
+              "connect-src 'self' http://localhost:8000 https://intelligestor-backend.onrender.com",
             ].join('; '),
           },
         ],

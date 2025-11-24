@@ -2,9 +2,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  Home, Package, ShoppingCart, MessageCircle, 
-  FileText, Settings, LogOut, Layers, Bell, 
-  Store, Users, DollarSign, BarChart3
+  Settings, LogOut, Bell, Store
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,13 +11,8 @@ interface LayoutProps {
 }
 
 const menuItems = [
-  { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: Store, label: 'E-commerce', href: '/ecommerce' },
-  { icon: Package, label: 'Produtos', href: '/produtos' },
-  { icon: ShoppingCart, label: 'Vendas', href: '/vendas' },
-  { icon: Layers, label: 'Estoque', href: '/estoque' },
-  { icon: Users, label: 'Clientes', href: '/clientes' },
-  { icon: DollarSign, label: 'Financeiro', href: '/financeiro' },
+  { icon: Settings, label: 'Configurações', href: '/configuracoes' },
 ];
 
 export default function AppLayout({ children }: LayoutProps) {

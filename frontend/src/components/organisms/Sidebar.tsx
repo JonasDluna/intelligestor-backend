@@ -5,13 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingBag,
-  Warehouse,
-  TrendingUp,
-  DollarSign,
-  Users,
   Settings,
   Menu,
   X,
@@ -25,13 +18,7 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Store, label: 'E-commerce', href: '/ecommerce' },
-  { icon: Package, label: 'Produtos', href: '/produtos' },
-  { icon: Warehouse, label: 'Estoque', href: '/estoque' },
-  { icon: TrendingUp, label: 'Vendas', href: '/vendas' },
-  { icon: DollarSign, label: 'Financeiro', href: '/financeiro' },
-  { icon: Users, label: 'Clientes', href: '/clientes' },
   { icon: Settings, label: 'Configurações', href: '/configuracoes' },
 ];
 
@@ -48,9 +35,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle })
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/ecommerce" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <LayoutDashboard className="h-5 w-5 text-white" />
+              <Store className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold text-gray-900">IntelliGestor</span>
           </Link>
@@ -58,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle })
         
         {collapsed && (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary mx-auto">
-            <LayoutDashboard className="h-5 w-5 text-white" />
+            <Store className="h-5 w-5 text-white" />
           </div>
         )}
 

@@ -11,7 +11,15 @@ import type {
   AutomacaoCreateRequest,
   AutomacaoUpdateRequest,
   ClienteCreateRequest,
-  ClienteUpdateRequest
+  ClienteUpdateRequest,
+  CatalogEligibilityStatus,
+  CatalogMultipleEligibility,
+  CatalogSearchResult,
+  BuyBoxAnalysis,
+  BrandCentralQuota,
+  BrandCentralSuggestion,
+  BrandCentralSuggestionDetail,
+  BrandCentralValidation,
 } from '@/types';
 
 // ============================================
@@ -360,6 +368,168 @@ export const catalogoApi = {
   // Listar categorias ML
   async categories() {
     const response = await axiosInstance.get<ApiResponse>('/api/catalog/categories');
+    return response.data;
+  },
+
+  // ============================================
+  // CATÁLOGO ML - SISTEMA COMPLETO
+  // ============================================
+
+  // ELEGIBILIDADE
+  async checkEligibility(itemId: string): Promise<CatalogEligibilityStatus> {
+    const response = await axiosInstance.get<ApiResponse<CatalogEligibilityStatus>>(`/ml/catalog/eligibility/${itemId}`);
+    return response.data.data!;
+  },
+
+  async checkMultipleEligibility(itemIds: string[]): Promise<CatalogMultipleEligibility> {
+    const response = await axiosInstance.get<ApiResponse<CatalogMultipleEligibility>>('/ml/catalog/eligibility/multiget', {
+      params: { item_ids: itemIds.join(',') }
+    });
+    return response.data.data!;
+  },
+
+  async getSellerItems(userId: string, catalogListing: boolean = true, status?: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/catalog/seller/${userId}/items`, {
+      params: { catalog_listing: catalogListing, ...(status && { status }) }
+    });
+    return response.data;
+  },
+
+  // BUSCA DE PRODUTOS
+  async searchProducts(params: {
+    siteId: string;
+    q?: string;
+    productIdentifier?: string;
+    domainId?: string;
+    listingStrategy?: string;
+    status?: string;
+    offset?: number;
+    limit?: number;
+  }): Promise<CatalogSearchResult> {
+    const response = await axiosInstance.get<ApiResponse<CatalogSearchResult>>('/ml/catalog/products/search', {
+      params: {
+        site_id: params.siteId,
+        ...(params.q && { q: params.q }),
+        ...(params.productIdentifier && { product_identifier: params.productIdentifier }),
+        ...(params.domainId && { domain_id: params.domainId }),
+        ...(params.listingStrategy && { listing_strategy: params.listingStrategy }),
+        ...(params.status && { status: params.status }),
+        offset: params.offset || 0,
+        limit: params.limit || 10,
+      }
+    });
+    return response.data.data!;
+  },
+
+  async getProductDetails(productId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/catalog/products/${productId}`);
+    return response.data;
+  },
+
+  // PUBLICAÇÃO
+  async createCatalogListing(data: Record<string, unknown>) {
+    const response = await axiosInstance.post<ApiResponse>('/ml/catalog/items/create', data);
+    return response.data;
+  },
+
+  async createCatalogOptin(data: { item_id: string; catalog_product_id: string; variation_id?: number }) {
+    const response = await axiosInstance.post<ApiResponse>('/ml/catalog/items/optin', data);
+    return response.data;
+  },
+
+  // COMPETIÇÃO E BUY BOX
+  async getBuyBoxAnalysis(itemId: string): Promise<BuyBoxAnalysis> {
+    const response = await axiosInstance.get<ApiResponse<BuyBoxAnalysis>>(`/ml/buybox/analysis/${itemId}`);
+    return response.data.data!;
+  },
+
+  async getProductCompetition(productId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/products/${productId}/competition`);
+    return response.data;
+  },
+
+  async getProductCompetitors(productId: string, limit: number = 10, offset: number = 0) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/products/${productId}/items`, {
+      params: { limit, offset }
+    });
+    return response.data;
+  },
+
+  // BRAND CENTRAL
+  async getBrandCentralQuota(userId: string): Promise<BrandCentralQuota> {
+    const response = await axiosInstance.get<ApiResponse<BrandCentralQuota>>(`/ml/brand-central/users/${userId}/quota`);
+    return response.data.data!;
+  },
+
+  async getAvailableDomains(siteId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/brand-central/domains/${siteId}/available`);
+    return response.data;
+  },
+
+  async getDomainTechnicalSpecs(domainId: string, specType: string = 'full') {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/brand-central/domains/${domainId}/technical-specs`, {
+      params: { spec_type: specType }
+    });
+    return response.data;
+  },
+
+  async validateSuggestion(data: Record<string, unknown>) {
+    const response = await axiosInstance.post<ApiResponse<BrandCentralValidation[]>>('/ml/brand-central/suggestions/validate', data);
+    return response.data.data!;
+  },
+
+  async createSuggestion(data: Record<string, unknown>): Promise<BrandCentralSuggestion> {
+    const response = await axiosInstance.post<ApiResponse<BrandCentralSuggestion>>('/ml/brand-central/suggestions/create', data);
+    return response.data.data!;
+  },
+
+  async getSuggestion(suggestionId: string): Promise<BrandCentralSuggestionDetail> {
+    const response = await axiosInstance.get<ApiResponse<BrandCentralSuggestionDetail>>(`/ml/brand-central/suggestions/${suggestionId}`);
+    return response.data.data!;
+  },
+
+  async updateSuggestion(suggestionId: string, data: Record<string, unknown>): Promise<BrandCentralSuggestion> {
+    const response = await axiosInstance.put<ApiResponse<BrandCentralSuggestion>>(`/ml/brand-central/suggestions/${suggestionId}`, data);
+    return response.data.data!;
+  },
+
+  async listUserSuggestions(userId: string, params?: {
+    status?: string;
+    domainIds?: string[];
+    title?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<BrandCentralSuggestion[]> {
+    const response = await axiosInstance.get<ApiResponse<BrandCentralSuggestion[]>>(`/ml/brand-central/users/${userId}/suggestions`, {
+      params: {
+        ...(params?.status && { status: params.status }),
+        ...(params?.domainIds && { domain_ids: params.domainIds.join(',') }),
+        ...(params?.title && { title: params.title }),
+        limit: params?.limit || 10,
+        offset: params?.offset || 0,
+      }
+    });
+    return response.data.data!;
+  },
+
+  async getSuggestionValidations(suggestionId: string): Promise<BrandCentralValidation[]> {
+    const response = await axiosInstance.get<ApiResponse<BrandCentralValidation[]>>(`/ml/brand-central/suggestions/${suggestionId}/validations`);
+    return response.data.data!;
+  },
+
+  // SINCRONIZAÇÃO
+  async getCatalogSyncStatus(itemId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/catalog/sync/${itemId}/status`);
+    return response.data;
+  },
+
+  async fixCatalogSync(itemId: string) {
+    const response = await axiosInstance.post<ApiResponse>(`/ml/catalog/sync/${itemId}/fix`);
+    return response.data;
+  },
+
+  async getForewarningDate(itemId: string) {
+    const response = await axiosInstance.get<ApiResponse>(`/ml/catalog/forewarning/${itemId}/date`);
     return response.data;
   },
 };

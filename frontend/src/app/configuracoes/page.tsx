@@ -1,9 +1,18 @@
 'use client';
 import AppLayout from '@/components/templates/AppLayout';
+import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { Settings, User, Bell, Shield, Database } from 'lucide-react';
 
 export default function ConfiguracoesPage() {
+  return (
+    <ProtectedRoute>
+      <ConfiguracoesContent />
+    </ProtectedRoute>
+  );
+}
+
+function ConfiguracoesContent() {
   return (
     <AppLayout>
       <div className="space-y-6">

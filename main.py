@@ -16,8 +16,10 @@ from app.routers import (
     produtos,
     estoque,
     ml,
+    ml_real,  # Nova rota para dados REAIS do ML
     automacao,
-    webhooks_ml
+    webhooks_ml,
+    ai_analysis
 )
 
 # Criar aplicação FastAPI
@@ -64,11 +66,13 @@ app.include_router(webhooks_ml.router)
 # IA (Legacy + New)
 app.include_router(ia_buybox.router)
 app.include_router(ia_products.router)
+app.include_router(ai_analysis.router)
 
 # Core V2.0 - Novos endpoints
 app.include_router(produtos.router)
 app.include_router(estoque.router)
 app.include_router(ml.router)
+app.include_router(ml_real.router)  # API REAL do Mercado Livre
 app.include_router(automacao.router)
 
 

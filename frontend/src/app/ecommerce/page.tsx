@@ -2,11 +2,20 @@
 
 import React from 'react';
 import AppLayout from '@/components/templates/AppLayout';
+import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardContent } from '@/components/atoms';
 import { ShoppingCart, Package, TrendingUp, MessageSquare, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EcommercePage() {
+  return (
+    <ProtectedRoute>
+      <EcommerceContent />
+    </ProtectedRoute>
+  );
+}
+
+function EcommerceContent() {
   const platforms = [
     {
       name: 'Mercado Livre',
