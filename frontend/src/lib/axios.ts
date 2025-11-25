@@ -3,6 +3,9 @@
 
 import axios, { AxiosError } from 'axios';
 
+// Check if running in development mode
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 // Base URL da API - sem /v1 pois o backend não usa esse prefixo
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -24,11 +27,15 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+    if (IS_DEV) {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+    }
     return config;
   },
   (error) => {
-    console.error('[API Request Error]', error);
+    if (IS_DEV) {
+      console.error('[API Request Error]', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -36,16 +43,20 @@ axiosInstance.interceptors.request.use(
 // Interceptor de resposta
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.config.url} - Status: ${response.status}`);
+    if (IS_DEV) {
+      console.log(`[API Response] ${response.config.url} - Status: ${response.status}`);
+    }
     return response;
   },
   (error: AxiosError) => {
-    console.error('[API Response Error]', {
-      url: error.config?.url,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
+    if (IS_DEV) {
+      console.error('[API Response Error]', {
+        url: error.config?.url,
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
+    }
 
     // Tratamento de erros específicos
     if (error.response?.status === 401) {
