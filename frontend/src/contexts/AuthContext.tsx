@@ -202,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await authApi.getStatus(user.id);
-      const isConnected = response.data?.connected || false;
+      const isConnected = (response.data as any)?.connected || false;
       
       // Update user ML connection status
       setUser((prev) => prev ? { ...prev, ml_connected: isConnected } : null);

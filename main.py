@@ -32,25 +32,16 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configurar CORS - Permitir origens específicas
+# Configurar CORS - Permitir todas as origens Vercel
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://intelligestor-frontend.vercel.app",
 ]
 
-# Adicionar todos os domínios preview do Vercel dinamicamente
-import re
-
-def check_vercel_origin(origin: str) -> bool:
-    """Verifica se a origem é um domínio Vercel válido"""
-    vercel_pattern = re.compile(r'^https://intelligestor-frontend.*\.vercel\.app$')
-    return bool(vercel_pattern.match(origin))
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://intelligestor-frontend.*\.vercel\.app",
+    allow_origins=["*"],  # Permite todas as origens temporariamente
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
