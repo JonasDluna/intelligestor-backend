@@ -43,6 +43,7 @@ def get_version_info() -> dict:
             "Suporte a pictures[] ao invés de thumbnail",
             "Frontend exibindo dados corretamente",
             "Versão automática via Git",
-            "Integrações ML vinculadas à página Mercado Livre e ajustes de status/desconexão"
+            "Integrações ML vinculadas à página Mercado Livre e ajustes de status/desconexão",
+            "Trigger de redeploy Render (infra/render)"
         ]
     }
