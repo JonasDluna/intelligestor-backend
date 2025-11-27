@@ -189,7 +189,7 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
                       }
                       return null;
                     })
-                    .filter((url): url is string => Boolean(url))
+                    .filter((url: any): url is string => Boolean(url))
                 : [],
               permalink: item.permalink || null,
               sold_quantity: item.sold_quantity || 0,
