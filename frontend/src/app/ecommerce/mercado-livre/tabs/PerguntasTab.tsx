@@ -27,7 +27,7 @@ export default function PerguntasTab() {
       setLoading(true);
       const response = await api.mlExtended.perguntas(statusFilter);
       if (response?.success && response?.perguntas) {
-        setPerguntas(response.perguntas);
+        setPerguntas(response.perguntas as any);
       }
     } catch (error) {
       console.error('Erro ao carregar perguntas:', error);
