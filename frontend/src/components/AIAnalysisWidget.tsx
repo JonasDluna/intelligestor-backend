@@ -44,7 +44,7 @@ export default function AIAnalysisWidget({ item, userId }: AIAnalysisWidgetProps
       
       // Análise de precificação
       const pricingAnalysis = await aiService.analyzeProduct({
-        item_data: item,
+        item_data: item as any,
         analysis_type: 'pricing',
         user_context: `Produto ${item.title || item.ml_id} com preço atual R$ ${item.my_price}`,
         market_data: {
