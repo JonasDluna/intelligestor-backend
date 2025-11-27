@@ -42,6 +42,7 @@ def get_version_info() -> dict:
             "Atualização schema anuncios_ml", 
             "Suporte a pictures[] ao invés de thumbnail",
             "Frontend exibindo dados corretamente",
-            "Versão automática via Git"
+            "Versão automática via Git",
+            "Integrações ML vinculadas à página Mercado Livre e ajustes de status/desconexão"
         ]
     }
