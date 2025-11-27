@@ -31,7 +31,7 @@ export const IADescriptionGenerator: React.FC<IADescriptionGeneratorProps> = ({
         caracteristicas: caracteristicas.join(', '),
       });
 
-      if (result.data?.descricao) {
+      if ((result.data as any)?.descricao) {
         setShowResult(true);
       }
     } catch (error) {
@@ -40,8 +40,8 @@ export const IADescriptionGenerator: React.FC<IADescriptionGeneratorProps> = ({
   };
 
   const handleUseDescription = () => {
-    if (gerarDescricao.data?.data?.descricao) {
-      onDescriptionGenerated(gerarDescricao.data.data.descricao);
+    if ((gerarDescricao.data?.data as any)?.descricao) {
+      onDescriptionGenerated((gerarDescricao.data.data as any).descricao);
       onClose?.();
     }
   };
