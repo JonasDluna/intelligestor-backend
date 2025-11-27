@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from openai import AsyncOpenAI
 import os
+from app.config.settings import settings
 from app.config.settings import get_supabase_client
 import json
 
@@ -11,10 +12,8 @@ router = APIRouter(
     tags=["AI Analysis"]
 )
 
-# Configure OpenAI
-client = AsyncOpenAI(
-    api_key=os.getenv("OPENAI_API_KEY", "")
-)
+# Configure OpenAI via central settings
+client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
 class AIAnalysisRequest(BaseModel):
     item_data: Dict[str, Any]
@@ -48,7 +47,7 @@ async def call_chatgpt(prompt: str, system_message: str = None) -> str:
         messages.append({"role": "user", "content": prompt})
         
         response = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=settings.OPENAI_MODEL,
             messages=messages,
             max_tokens=1500,
             temperature=0.7

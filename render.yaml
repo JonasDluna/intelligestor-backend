@@ -24,7 +24,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
-        value: gpt-4
+        value: gpt-5.1-codex-mini
       - key: ML_CLIENT_ID
         sync: false
       - key: ML_CLIENT_SECRET

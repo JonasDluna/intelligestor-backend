@@ -1,6 +1,6 @@
 """
 Service - IA/BuyBox
-Análise inteligente de BuyBox e otimização de preços via GPT-4
+Análise inteligente de BuyBox e otimização de preços via IA (OpenAI)
 """
 from typing import List, Dict, Any
 from decimal import Decimal

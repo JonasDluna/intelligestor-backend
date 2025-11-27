@@ -133,6 +133,26 @@ async def health_check():
     }
 
 
+@app.get("/health/supabase")
+async def health_supabase():
+    """Diagnóstico rápido do Supabase (sem expor segredos)"""
+    url = settings.SUPABASE_URL or ""
+    host = ""
+    if url:
+        try:
+            # Extrair host do URL
+            from urllib.parse import urlparse
+            host = urlparse(url).netloc
+        except Exception:
+            host = url
+    masked_host = host[:6] + "..." + host[-10:] if host and len(host) > 16 else host
+    return {
+        "configured": bool(settings.SUPABASE_URL),
+        "host": masked_host,
+        "has_service_role": bool(settings.SUPABASE_SERVICE_ROLE_KEY),
+    }
+
+
 @app.get("/api/info")
 async def api_info():
     """Informações sobre a API"""

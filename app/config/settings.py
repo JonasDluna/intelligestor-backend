@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.1-codex-mini")
     
     # Mercado Livre Configuration
     ML_CLIENT_ID: str = os.getenv("ML_CLIENT_ID") or os.getenv("ML_APP_ID", "")
