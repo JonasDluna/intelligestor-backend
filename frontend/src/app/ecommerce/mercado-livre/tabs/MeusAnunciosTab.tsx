@@ -31,7 +31,7 @@ export default function MeusAnunciosTab() {
       
       if (response?.success && Array.isArray(response?.anuncios)) {
         // Validar e filtrar anúncios com dados obrigatórios
-        const validAnuncios = response.anuncios.filter((anuncio) => anuncio.ml_id && anuncio.title);
+        const validAnuncios = response.anuncios.filter((anuncio: any) => anuncio.ml_id && anuncio.title);
         setAnuncios(validAnuncios);
       } else {
         setAnuncios([]);
