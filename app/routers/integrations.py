@@ -5,9 +5,10 @@ Fluxo:
 - Geração de auth URL por integração
 - Callback salva tokens na própria integração
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body
 from fastapi.responses import RedirectResponse
 from typing import Optional, Dict, Any
+from pydantic import BaseModel
 from datetime import datetime, timedelta
 from urllib.parse import quote
 import httpx
@@ -156,17 +157,33 @@ async def oauth_callback(code: Optional[str] = None, state: Optional[str] = None
 
 
 @router.post("/{integration_id}/disconnect")
-async def disconnect(integration_id: str, user_id: str):
-    res = _table().update(
-        {
-            "access_token": None,
-            "refresh_token": None,
-            "ml_user_id": None,
-            "expires_at": None,
-            "status": "disconnected",
-            "updated_at": datetime.utcnow().isoformat(),
-        }
-    ).eq("id", integration_id).eq("user_id", user_id).execute()
+class DisconnectRequest(BaseModel):
+    user_id: Optional[str] = None
+
+
+@router.post("/{integration_id}/disconnect")
+async def disconnect(
+    integration_id: str,
+    user_id: Optional[str] = Query(None, description="ID do cliente (query opcional)"),
+    body: Optional[DisconnectRequest] = Body(None),
+):
+    # Aceita user_id via query ou body para compatibilidade com o frontend
+    if not user_id and body and body.user_id:
+        user_id = body.user_id
+
+    update_payload = {
+        "access_token": None,
+        "refresh_token": None,
+        "ml_user_id": None,
+        "expires_at": None,
+        "status": "disconnected",
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+
+    query = _table().update(update_payload).eq("id", integration_id)
+    if user_id:
+        query = query.eq("user_id", user_id)
+    res = query.execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Integração não encontrada")
     return {"status": "success", "integration": res.data[0]}
