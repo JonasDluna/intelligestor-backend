@@ -29,7 +29,7 @@ from app.routers import (
 app = FastAPI(
     title="Intelligestor Backend",
     description="Sistema de gestão para integração com Mercado Livre",
-    version="1.0.0",
+    version="1.0.1",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -113,7 +113,7 @@ async def root():
     return {
         "status": "online",
         "service": "Intelligestor Backend",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "environment": settings.ENVIRONMENT,
         "render_service_id": settings.RENDER_SERVICE_ID
     }
