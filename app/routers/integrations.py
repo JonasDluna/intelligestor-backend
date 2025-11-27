@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 from urllib.parse import quote
 import httpx
+from postgrest.exceptions import APIError
 
 from app.config.settings import settings, get_supabase_client
 
@@ -46,8 +47,20 @@ async def create_integration(payload: Dict[str, Any]):
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat(),
     }
-    res = _table().insert(record).execute()
-    return {"status": "success", "integration": res.data[0] if res.data else record}
+    try:
+        res = _table().insert(record).execute()
+        return {"status": "success", "integration": res.data[0] if res.data else record}
+    except APIError as e:
+        # Expor detalhe de erro do PostgREST para diagnóstico em produção
+        raise HTTPException(status_code=400, detail={
+            "source": "supabase",
+            "code": e.code,
+            "message": e.message,
+            "hint": e.hint,
+            "details": e.details
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{integration_id}")
