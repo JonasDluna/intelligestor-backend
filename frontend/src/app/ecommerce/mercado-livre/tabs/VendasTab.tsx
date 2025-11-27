@@ -26,7 +26,7 @@ export default function VendasTab() {
       setLoading(true);
       const response = await api.mlExtended.vendas(50);
       if (response?.success && response?.vendas) {
-        setVendas(response.vendas);
+        setVendas(response.vendas as any);
       }
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);
