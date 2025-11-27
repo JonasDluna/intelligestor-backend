@@ -6,6 +6,7 @@ Fluxo:
 - Callback salva tokens na própria integração
 """
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import RedirectResponse
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 from urllib.parse import quote
@@ -103,10 +104,13 @@ async def get_auth_url(integration_id: str, user_id: str = Query(..., descriptio
 
 @router.get("/callback")
 async def oauth_callback(code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
+    # Em caso de erro no provedor, redireciona ao frontend com querystring informando o erro
     if error:
-        raise HTTPException(status_code=400, detail=error)
+        target = f"{settings.FRONTEND_SUCCESS_REDIRECT}?error={quote(str(error))}"
+        return RedirectResponse(url=target, status_code=302)
     if not code or not state:
-        raise HTTPException(status_code=400, detail="Código ou state ausente")
+        target = f"{settings.FRONTEND_SUCCESS_REDIRECT}?error=codigo_ou_state_ausente"
+        return RedirectResponse(url=target, status_code=302)
 
     # Carrega integração específica
     res = _table().select("*").eq("id", state).maybe_single().execute()
@@ -147,7 +151,8 @@ async def oauth_callback(code: Optional[str] = None, state: Optional[str] = None
     }
     _table().update(update_payload).eq("id", state).execute()
 
-    return {"status": "success", "message": "Conta conectada", "integration_id": state}
+    # Sucesso: redireciona para o frontend (experiência unificada)
+    return RedirectResponse(url=settings.FRONTEND_SUCCESS_REDIRECT, status_code=302)
 
 
 @router.post("/{integration_id}/disconnect")

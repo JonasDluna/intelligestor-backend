@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     # Vercel Configuration
     VERCEL_PROJECT_ID: str = os.getenv("VERCEL_PROJECT_ID", "")
     VERCEL_URL: str = os.getenv("VERCEL_URL", "")
+    # Frontend redirect após OAuth bem-sucedido
+    FRONTEND_SUCCESS_REDIRECT: str = os.getenv("FRONTEND_SUCCESS_REDIRECT", "https://intelligestor-frontend.vercel.app/ecommerce")
     
     # Application Settings
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
