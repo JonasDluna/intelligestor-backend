@@ -67,7 +67,7 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
   const loadOfficialMarketData = async () => {
     setLoading(true);
     try {
-      console.log('🔄 Carregando dados OFICIAIS do ML para:', item.item_id);
+      console.warn('🔄 Carregando dados OFICIAIS do ML para:', item.item_id);
       
       // Determinar product_id (se possível extrair do catalog_product_id ou assumir)
       const productId = item.catalog_product_id || undefined;
@@ -83,7 +83,7 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
       setWinnerData(completeAnalysis.current_winner);
       setExecutiveSummary(completeAnalysis.summary);
       
-      console.log('✅ Dados OFICIAIS carregados com sucesso:', {
+      console.warn('✅ Dados OFICIAIS carregados com sucesso:', {
         analysis: completeAnalysis.buybox_analysis.buybox_status.current_status,
         competitors: completeAnalysis.competitors?.total_competitors || 0,
         winner: completeAnalysis.current_winner?.current_winner.item_id || 'N/A',
@@ -618,9 +618,9 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
                   </div>
                   
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full" 
-                      style={{ width: `${officialAnalysis.competitive_advantages.boost_score.score}%` }}
+                    <div
+                      className={`bg-green-600 h-2 rounded-full boost-score-bar`}
+                      data-score={officialAnalysis.competitive_advantages.boost_score.score}
                     ></div>
                   </div>
                   
@@ -854,6 +854,8 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
               <button
                 onClick={onClose}
                 className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-colors"
+                aria-label="Fechar modal"
+                title="Fechar modal"
               >
                 <X className="h-5 w-5" />
               </button>

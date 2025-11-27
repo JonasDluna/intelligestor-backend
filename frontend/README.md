@@ -68,3 +68,55 @@ O fluxo oficial é via Vercel (`vercel.json`). Após o merge na branch principal
 3. Faça o deploy com `vercel` ou via pipeline automático do GitHub.
 
 Consulte `DEPLOY_VERCEL.md` para detalhes específicos.
+
+### Fluxo OAuth Mercado Livre
+Este projeto suporta duas estratégias para o `redirect_uri` do OAuth 2.0 do Mercado Livre. A recomendação para produção é utilizar o callback no backend com redirecionamento 302 para o frontend, por segurança e simplicidade. Abaixo, documentamos ambas.
+
+1) Callback no FRONTEND (fluxo atual)
+- Página: `src/app/integrations/ml/callback/page.tsx` (e alias `src/app/auth/ml/callback/page.tsx` como wrapper)
+- Comportamento: a página lê `code` e `state` da URL, chama o backend em `GET /integrations/ml/callback?code=...&state=...` para trocar tokens e, ao sucesso, redireciona para `/ecommerce`.
+- Variáveis:
+	- `NEXT_PUBLIC_BACKEND_URL` (ex.: `https://intelligestor-backend.onrender.com`)
+	- Configure na Vercel (Preview/Production) e local (arquivo `.env.local`).
+- Ajustes necessários no ML Developer (Mercado Livre):
+	- Adicione o `redirect_uri` exato nas URLs Autorizadas, por exemplo:
+		- `https://<seu-domínio-frontend>/integrations/ml/callback`
+
+2) Callback no BACKEND (recomendado em produção)
+- Endpoint: `GET /integrations/ml/callback` (FastAPI). Troca tokens server-to-server e atualiza a integração.
+- Comportamento sugerido: após salvar os tokens, responder com HTTP 302 para a rota do frontend (por exemplo, `/ecommerce`), mantendo a URL do cliente consistente.
+- Vantagens:
+	- O `code` não transita na camada de UI; menos superfície de ataque e menor chance de vazamento em logs do navegador.
+	- Menos dependência de CORS/variáveis públicas na etapa crítica de OAuth.
+- Ajustes necessários no ML Developer:
+	- Adicione o `redirect_uri` do backend, por exemplo:
+		- `https://<seu-domínio-backend>/integrations/ml/callback`
+- Ajustes no código (se optar por migrar):
+	- No backend, após a troca de tokens, retorne `RedirectResponse(frontend_url)` (302) em vez de JSON.
+	- No Supabase/DB, mantenha `redirect_uri` da integração apontando para o backend.
+
+Geração de Auth URL (via backend)
+- Endpoint: `GET /integrations/ml/{integration_id}/auth-url?user_id={user_id}`
+- Exemplo (PowerShell):
+	```powershell
+	$BACKEND = 'https://intelligestor-backend.onrender.com'
+	$USER_ID = '<uuid-do-cliente>'
+	$INTEGRATION_ID = '<uuid-da-integracao>'
+	Invoke-RestMethod "$BACKEND/integrations/ml/$INTEGRATION_ID/auth-url?user_id=$USER_ID" | ConvertTo-Json -Depth 5
+	```
+
+Teste end-to-end
+- Com o `redirect_uri` configurado (frontend ou backend), abra o `auth_url` retornado e conclua a autorização no Mercado Livre.
+- Se usar callback FRONTEND, você verá a página visual de processamento e será redirecionado para `/ecommerce`.
+- Verifique o status no backend:
+	```powershell
+	$BACKEND = 'https://intelligestor-backend.onrender.com'
+	$USER_ID = '<uuid-do-cliente>'
+	$INTEGRATION_ID = '<uuid-da-integracao>'
+	Invoke-RestMethod "$BACKEND/integrations/ml/$INTEGRATION_ID/status?user_id=$USER_ID" | ConvertTo-Json -Depth 5
+	```
+
+Troubleshooting
+- 400 invalid redirect_uri: o valor precisa ser exatamente igual ao configurado no app do Mercado Livre e ao enviado no `auth_url`.
+- CORS/Preview: confirme `NEXT_PUBLIC_BACKEND_URL` nas variáveis da Vercel (Preview/Production) e o domínio no `next.config.ts`.
+- Build Next.js: páginas cliente precisam da diretiva `'use client'` como primeira linha e apenas um `export default` por arquivo.

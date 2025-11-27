@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/templates/AppLayout';
 import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
@@ -53,12 +54,16 @@ export default function MercadoLivrePage() {
 function MercadoLivreContent() {
   const { user } = useAuth();
   const userId = user?.id;
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mlUserData, setMlUserData] = useState<{ nickname?: string; ml_user_id?: string } | null>(null);
   const [backendVersion, setBackendVersion] = useState<string>('');
+  const [banner, setBanner] = useState<null | { type: 'success' | 'error'; message: string }>(null);
+  const [integrationId, setIntegrationId] = useState<string | null>(null);
   const popupIntervalRef = useRef<number | null>(null);
   const popupFallbackRef = useRef<number | null>(null);
 
@@ -91,22 +96,50 @@ function MercadoLivreContent() {
     try {
       const token = localStorage.getItem('auth_token');
       
-      if (!token) {
+      if (!token || !userId) {
         setIsConnected(false);
         setIsLoading(false);
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/ml/status`, {
+      // Se não houver integrationId configurado, tentar buscar agora
+      let currentIntegrationId = integrationId;
+      if (!currentIntegrationId) {
+        const listResp = await fetch(`${API_BASE_URL}/integrations/ml?user_id=${userId}&ts=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          cache: 'no-store'
+        });
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const first = listData?.integrations?.[0];
+          if (first?.id) {
+            currentIntegrationId = first.id as string;
+            setIntegrationId(currentIntegrationId);
+          }
+        }
+      }
+
+      if (!currentIntegrationId) {
+        setIsConnected(false);
+        setMlUserData(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/integrations/ml/${currentIntegrationId}/status?user_id=${userId}&ts=${Date.now()}` , {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        cache: 'no-store'
       });
       
       if (response.ok) {
         const data = await response.json();
-        setIsConnected(data.connected);
-        if (data.connected) {
+        const connected = (data?.status === 'connected');
+        setIsConnected(connected);
+        if (connected) {
           setMlUserData({
             nickname: data.nickname,
             ml_user_id: data.ml_user_id
@@ -125,12 +158,50 @@ function MercadoLivreContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [integrationId, userId]);
 
-  const connectToML = useCallback(() => {
+  const connectToML = useCallback(async () => {
     if (!userId) return;
 
-    const authUrl = `${API_BASE_URL}/auth/ml/login?user_id=${userId}`;
+    const token = localStorage.getItem('auth_token');
+    try {
+      // Garantir que temos uma integration
+      let currentIntegrationId = integrationId;
+      if (!currentIntegrationId) {
+        const listResp = await fetch(`${API_BASE_URL}/integrations/ml?user_id=${userId}&ts=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          cache: 'no-store'
+        });
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const first = listData?.integrations?.[0];
+          if (first?.id) {
+            currentIntegrationId = first.id as string;
+            setIntegrationId(currentIntegrationId);
+          }
+        }
+      }
+
+      if (!currentIntegrationId) {
+        alert('Integração do Mercado Livre não configurada. Crie uma integração nas Configurações.');
+        return;
+      }
+
+      // Obter auth_url da integração
+      const resp = await fetch(`${API_BASE_URL}/integrations/ml/${currentIntegrationId}/auth-url?user_id=${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        alert('Não foi possível iniciar a conexão: ' + txt);
+        return;
+      }
+      const { auth_url } = await resp.json();
+      const authUrl = auth_url as string;
 
     // Criar janela popup para autenticação
     const popup = window.open(
@@ -164,7 +235,11 @@ function MercadoLivreContent() {
       }
       checkMLConnection();
     }, 30000);
-  }, [checkMLConnection, clearPopupWatchers, userId]);
+    } catch (e) {
+      console.error('Erro ao iniciar conexão ML:', e);
+      alert('Não foi possível iniciar a conexão. Tente novamente.');
+    }
+  }, [checkMLConnection, clearPopupWatchers, userId, integrationId]);
 
   const disconnectFromML = useCallback(async () => {
     if (!confirm('Tem certeza que deseja desconectar sua conta do Mercado Livre?')) {
@@ -174,18 +249,34 @@ function MercadoLivreContent() {
     setIsDisconnecting(true);
     try {
       const token = localStorage.getItem('auth_token');
-      
-      const response = await fetch(`${API_BASE_URL}/ml/disconnect`, {
+      if (!integrationId || !userId) {
+        alert('Integração não encontrada.');
+        setIsDisconnecting(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/integrations/ml/${integrationId}/disconnect?user_id=${userId}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId })
       });
 
       if (response.ok) {
         setIsConnected(false);
         setMlUserData(null);
-        checkMLConnection();
+        setBanner({ type: 'success', message: 'Conta Mercado Livre desconectada com sucesso.' });
+        setTimeout(() => setBanner(null), 5000);
+        // Pequeno atraso para garantir conclusão no backend
+        setTimeout(() => {
+          checkMLConnection();
+          // Segunda verificação para evitar cache/condições de corrida
+          setTimeout(() => {
+            checkMLConnection();
+          }, 800);
+        }, 400);
       } else {
         alert('❌ Erro ao desconectar. Tente novamente.');
       }
@@ -195,7 +286,7 @@ function MercadoLivreContent() {
     } finally {
       setIsDisconnecting(false);
     }
-  }, [checkMLConnection]);
+  }, [checkMLConnection, integrationId, userId]);
 
   useEffect(() => {
     if (user) {
@@ -223,9 +314,61 @@ function MercadoLivreContent() {
     };
   }, [checkBackendVersion, checkMLConnection, clearPopupWatchers, user]);
 
+  // Banner de sucesso/erro via query (?connected=1 | ?error=...)
+  useEffect(() => {
+    const connected = searchParams?.get('connected');
+    const error = searchParams?.get('error');
+    if (!connected && !error) return;
+
+    if (connected === '1') {
+      setBanner({ type: 'success', message: 'Conta Mercado Livre conectada com sucesso.' });
+      // Garante atualização do status após o redirect final
+      setTimeout(() => {
+        checkMLConnection();
+      }, 800);
+    }
+    if (error) {
+      setBanner({ type: 'error', message: `Falha na conexão: ${decodeURIComponent(error)}` });
+    }
+
+    // Remove os parâmetros da URL para evitar reaparecer ao recarregar
+    const url = new URL(window.location.href);
+    url.searchParams.delete('connected');
+    url.searchParams.delete('error');
+    router.replace(url.pathname + (url.search ? '?' + url.searchParams.toString() : ''));
+
+    // Auto-fecha o banner após 5s
+    const t = setTimeout(() => setBanner(null), 5000);
+    return () => clearTimeout(t);
+  }, [searchParams, router, checkMLConnection]);
+
   return (
     <AppLayout>
       <div className="space-y-6">
+        {banner && (
+          <div
+            className={`flex items-start justify-between gap-4 px-4 py-3 rounded-lg border text-sm ${
+              banner.type === 'success'
+                ? 'bg-green-50 text-green-800 border-green-200'
+                : 'bg-red-50 text-red-800 border-red-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {banner.type === 'success' ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <span>{banner.message}</span>
+            </div>
+            <button
+              onClick={() => setBanner(null)}
+              className="shrink-0 text-xs underline underline-offset-2"
+            >
+              Fechar
+            </button>
+          </div>
+        )}
         {/* Header com voltar */}
         <div>
           <Link href="/ecommerce" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">

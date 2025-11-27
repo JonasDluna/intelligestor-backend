@@ -1,43 +1,43 @@
-# Intelligestor Backend
+# Intelligestor
 
-Sistema de gestão e análise competitiva para Mercado Livre com integração de IA.
+Plataforma de gestão e análise competitiva para Mercado Livre com integração de IA.
 
 ## 🚀 Estrutura do Projeto
 
 ```
-intelligestor-backend-main/
-├── app/                          # Aplicação principal
-│   ├── config/                   # Configurações (settings, database)
-│   ├── middleware/               # Middlewares (auth, CORS, etc)
-│   ├── models/                   # Modelos de dados
-│   ├── routers/                  # Endpoints da API
-│   │   ├── auth.py              # Autenticação
-│   │   ├── auth_ml.py           # OAuth Mercado Livre
-│   │   ├── catalog.py           # Catálogo de produtos
-│   │   ├── ml_real.py           # API Real do Mercado Livre
-│   │   ├── ia_buybox.py         # Análise IA BuyBox
-│   │   ├── ai_analysis.py       # Análises de IA
-│   │   ├── produtos.py          # Gestão de produtos
-│   │   ├── estoque.py           # Gestão de estoque
-│   │   ├── automacao.py         # Automações
-│   │   └── webhooks_ml.py       # Webhooks do ML
-│   ├── services/                 # Serviços de negócio
-│   └── utils/                    # Utilitários
-├── api/                          # API routes (Vercel)
-│   └── index.py
-├── frontend/                     # Frontend Next.js
-│   ├── src/
-│   │   ├── app/                 # Pages (App Router)
-│   │   ├── components/          # Componentes React
-│   │   └── services/            # Serviços API
-│   └── public/
-├── tests/                        # Testes automatizados
-├── main.py                       # Aplicação FastAPI principal
-├── start_server.py              # Script de inicialização
-├── requirements.txt             # Dependências Python
-├── render.yaml                  # Config deploy Render
-├── vercel.json                  # Config deploy Vercel
-└── README.md
+intelligestor/
+├── backend/
+│   ├── app/                      # Código FastAPI (config, middleware, models, routers, services, utils)
+│   ├── api/                      # Adapter serverless (Vercel) opcional
+│   ├── tests/                    # Testes Python
+│   ├── sql/                      # Scripts SQL Supabase (RLS, grants)
+│   ├── main.py                   # App principal FastAPI
+│   ├── start_server.py           # Inicialização local
+│   ├── run_sql_supabase.py       # Runner para scripts SQL
+│   ├── requirements.txt          # Dependências backend
+│   └── .python-version
+│
+├── frontend/                     # App Next.js (React 19 / Next 16 / Tailwind 4)
+│   ├── public/
+│   └── src/ (app, components, contexts, lib, services, styles, types, utils)
+│
+├── infra/
+│   ├── render/
+│   │   └── render.yaml           # Manifesto Render (cópia)
+│   ├── vercel/
+│   │   ├── backend-vercel.json   # Manifesto Vercel (backend opcional)
+│   │   └── frontend-vercel.json  # Manifesto Vercel (frontend)
+│   └── deploy/
+│       └── deploy.sh             # Script auxiliar de deploy
+│
+├── docs/                         # Documentação do projeto
+│   └── *.md
+│
+├── .env.example                  # Variáveis exemplo do backend
+├── render.yaml                   # Manifesto Render (ativo)
+├── vercel.json                   # Manifesto Vercel backend (opcional)
+├── README.md                     # Este arquivo
+└── intelligestor-backend.code-workspace
 
 ```
 
@@ -50,7 +50,7 @@ intelligestor-backend-main/
 - **Mercado Livre API** - Integração oficial
 
 ### Frontend
-- **Next.js 15** - Framework React
+- **Next.js 16** - Framework React
 - **TypeScript** - Tipagem estática
 - **Tailwind CSS** - Estilização
 - **Shadcn/ui** - Componentes UI
@@ -65,7 +65,7 @@ intelligestor-backend-main/
 
 ## 🔧 Instalação
 
-### Backend
+### Backend (local)
 
 ```powershell
 # Clone o repositório
@@ -77,7 +77,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 
 # Instalar dependências
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
 # Configurar variáveis de ambiente (.env)
 SUPABASE_URL=sua_url
@@ -85,13 +85,13 @@ SUPABASE_KEY=sua_key
 OPENAI_API_KEY=sua_key
 ML_CLIENT_ID=seu_client_id
 ML_CLIENT_SECRET=seu_secret
-ML_REDIRECT_URI=http://localhost:8000/auth/ml/callback
+ML_REDIRECT_URI=http://localhost:8000/integrations/ml/callback
 
 # Iniciar servidor
-python start_server.py
+python backend/start_server.py
 ```
 
-### Frontend
+### Frontend (local)
 
 ```powershell
 cd frontend
@@ -130,11 +130,9 @@ npm run dev
 ## 🚀 Deploy
 
 ### Backend (Render)
-```bash
-# Conectar repositório GitHub
-# Configurar variáveis de ambiente
-# Deploy automático via render.yaml
-```
+- O arquivo ativo continua no raiz: `render.yaml`.
+- Já atualizado para nova estrutura (instala `backend/requirements.txt` e inicia com `--app-dir backend`).
+- Alternativa: mover para `infra/render/render.yaml` e apontar no Render.
 
 ### Frontend (Vercel)
 ```powershell
@@ -197,5 +195,5 @@ Para suporte e dúvidas, entre em contato através do GitHub.
 
 ---
 
-**Versão**: 1.0.0  
+**Versão**: 1.1.0  
 **Última atualização**: Novembro 2025

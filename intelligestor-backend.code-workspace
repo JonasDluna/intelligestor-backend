@@ -1,8 +1,10 @@
 {
 	"folders": [
-		{
-			"path": ".."
-		}
+		{ "path": "." },
+		{ "path": "backend" },
+		{ "path": "frontend" },
+		{ "path": "infra" },
+		{ "path": "docs" }
 	],
 	"settings": {}
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppLayout from '@/components/templates/AppLayout';
 import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@/components/atoms';
@@ -35,7 +35,7 @@ function IntegracoesContent() {
     redirect_uri: defaultRedirect,
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -46,14 +46,15 @@ function IntegracoesContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user?.id) {
       setForm((f) => ({ ...f, user_id: user.id }));
-      loadData();
+      // chama a função memoizada/estável
+      void loadData();
     }
-  }, [user?.id]);
+  }, [user?.id, loadData]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -138,15 +139,16 @@ function IntegracoesContent() {
     setModalOpen(true);
   };
 
-  const badge = useMemo(
-    () => (status: IntegrationRecord['status']) =>
+  const badge = useMemo(() => {
+    const BadgeComponent = (status: IntegrationRecord['status']) =>
       status === 'connected' ? (
         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">Conectado</span>
       ) : (
         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Desconectado</span>
-      ),
-    []
-  );
+      );
+    BadgeComponent.displayName = 'BadgeComponent';
+    return BadgeComponent;
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -284,7 +286,7 @@ function IntegracoesContent() {
                   <a
                     href="https://developers.mercadolivre.com.br/devcenter"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noreferrer noopener"
                     className="inline-flex items-center text-blue-600 hover:text-blue-700"
                   >
                     Ver docs <ExternalLink className="h-3 w-3 ml-1" />

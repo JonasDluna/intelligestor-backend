@@ -57,9 +57,12 @@ export const integrationService = {
   },
 
   disconnect(id: string, userId: string) {
-    return axiosInstance.post<{ integration: IntegrationRecord }>(`/integrations/ml/${id}/disconnect`, {
-      user_id: userId,
-    });
+    // Envia user_id tanto no body quanto como query param para compatibilidade
+    return axiosInstance.post<{ integration: IntegrationRecord }>(
+      `/integrations/ml/${id}/disconnect`,
+      { user_id: userId },
+      { params: { user_id: userId } }
+    );
   },
 };
 
