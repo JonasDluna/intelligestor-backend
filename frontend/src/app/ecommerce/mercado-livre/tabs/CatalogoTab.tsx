@@ -12,8 +12,81 @@ import {
   BookOpen,
   Sparkles,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 type CatalogoView = 'overview' | 'elegibilidade' | 'busca' | 'monitoramento' | 'sugestoes';
+type FeatureColor = 'green' | 'blue' | 'yellow' | 'purple';
+
+type FeatureCard = {
+  id: CatalogoView;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  color: FeatureColor;
+  stats: string;
+};
+
+const FEATURE_COLOR_MAP: Record<FeatureColor, { bg: string; text: string; hover: string; border: string }> = {
+  green: {
+    bg: 'bg-green-50',
+    text: 'text-green-600',
+    hover: 'hover:bg-green-100',
+    border: 'border-green-200',
+  },
+  blue: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-600',
+    hover: 'hover:bg-blue-100',
+    border: 'border-blue-200',
+  },
+  yellow: {
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-600',
+    hover: 'hover:bg-yellow-100',
+    border: 'border-yellow-200',
+  },
+  purple: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-600',
+    hover: 'hover:bg-purple-100',
+    border: 'border-purple-200',
+  },
+};
+
+const FEATURE_CARDS: FeatureCard[] = [
+  {
+    id: 'elegibilidade',
+    icon: CheckCircle2,
+    title: 'Verificar Elegibilidade',
+    description: 'Verifique se seus produtos podem ser publicados no catálogo',
+    color: 'green',
+    stats: '+50% visibilidade',
+  },
+  {
+    id: 'busca',
+    icon: Search,
+    title: 'Buscar Produtos',
+    description: 'Encontre produtos do catálogo para publicar',
+    color: 'blue',
+    stats: '5000+ produtos',
+  },
+  {
+    id: 'monitoramento',
+    icon: Target,
+    title: 'Monitorar Buy Box',
+    description: 'Acompanhe sua performance em tempo real',
+    color: 'yellow',
+    stats: 'Tempo real',
+  },
+  {
+    id: 'sugestoes',
+    icon: Lightbulb,
+    title: 'Brand Central',
+    description: 'Sugira novos produtos para o catálogo',
+    color: 'purple',
+    stats: 'Quota disponível',
+  },
+];
 
 interface CatalogoTabProps {
   userId: string;
@@ -21,71 +94,6 @@ interface CatalogoTabProps {
 
 export default function CatalogoTab({ userId }: CatalogoTabProps) {
   const [activeView, setActiveView] = useState<CatalogoView>('overview');
-
-  const features = [
-    {
-      id: 'elegibilidade' as CatalogoView,
-      icon: CheckCircle2,
-      title: 'Verificar Elegibilidade',
-      description: 'Verifique se seus produtos podem ser publicados no catálogo',
-      color: 'green',
-      stats: '+50% visibilidade',
-    },
-    {
-      id: 'busca' as CatalogoView,
-      icon: Search,
-      title: 'Buscar Produtos',
-      description: 'Encontre produtos do catálogo para publicar',
-      color: 'blue',
-      stats: '5000+ produtos',
-    },
-    {
-      id: 'monitoramento' as CatalogoView,
-      icon: Target,
-      title: 'Monitorar Buy Box',
-      description: 'Acompanhe sua performance em tempo real',
-      color: 'yellow',
-      stats: 'Tempo real',
-    },
-    {
-      id: 'sugestoes' as CatalogoView,
-      icon: Lightbulb,
-      title: 'Brand Central',
-      description: 'Sugira novos produtos para o catálogo',
-      color: 'purple',
-      stats: 'Quota disponível',
-    },
-  ];
-
-  const getColorClasses = (color: string) => {
-    const colors = {
-      green: {
-        bg: 'bg-green-50',
-        text: 'text-green-600',
-        hover: 'hover:bg-green-100',
-        border: 'border-green-200',
-      },
-      blue: {
-        bg: 'bg-blue-50',
-        text: 'text-blue-600',
-        hover: 'hover:bg-blue-100',
-        border: 'border-blue-200',
-      },
-      yellow: {
-        bg: 'bg-yellow-50',
-        text: 'text-yellow-600',
-        hover: 'hover:bg-yellow-100',
-        border: 'border-yellow-200',
-      },
-      purple: {
-        bg: 'bg-purple-50',
-        text: 'text-purple-600',
-        hover: 'hover:bg-purple-100',
-        border: 'border-purple-200',
-      },
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
 
   if (activeView === 'overview') {
     return (
@@ -104,6 +112,11 @@ export default function CatalogoTab({ userId }: CatalogoTabProps) {
                 <p className="text-gray-600 mb-4">
                   Gerencie publicações de catálogo, verifique elegibilidade e monitore performance
                 </p>
+                {userId && (
+                  <p className="text-sm text-gray-500 mb-4">
+                    Conta vinculada: <span className="font-mono">{userId}</span>
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-green-200">
                     <Sparkles className="h-4 w-4" />
@@ -125,9 +138,9 @@ export default function CatalogoTab({ userId }: CatalogoTabProps) {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {features.map((feature) => {
+          {FEATURE_CARDS.map((feature) => {
             const Icon = feature.icon;
-            const colors = getColorClasses(feature.color);
+            const colors = FEATURE_COLOR_MAP[feature.color];
 
             return (
               <Card

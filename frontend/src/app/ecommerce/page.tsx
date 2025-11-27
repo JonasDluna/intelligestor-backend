@@ -7,6 +7,57 @@ import { Card, CardContent } from '@/components/atoms';
 import { ShoppingCart, Package, TrendingUp, MessageSquare, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
+const PLATFORMS = [
+  {
+    name: 'Mercado Livre',
+    icon: Package,
+    description: 'Gerencie anúncios, monitore BuyBox e otimize vendas',
+    href: '/ecommerce/mercado-livre',
+    color: 'yellow',
+    bgColor: 'bg-yellow-50',
+    iconColor: 'text-yellow-600',
+    borderColor: 'border-yellow-200',
+    hoverBg: 'hover:bg-yellow-100',
+    status: 'active' as const,
+  },
+  {
+    name: 'Shopee',
+    icon: ShoppingCart,
+    description: 'Integração com Shopee (em breve)',
+    href: '#',
+    color: 'orange',
+    bgColor: 'bg-orange-50',
+    iconColor: 'text-orange-600',
+    borderColor: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-100',
+    status: 'coming-soon' as const,
+  },
+  {
+    name: 'Amazon',
+    icon: TrendingUp,
+    description: 'Integração com Amazon (em breve)',
+    href: '#',
+    color: 'blue',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    borderColor: 'border-blue-200',
+    hoverBg: 'hover:bg-blue-100',
+    status: 'coming-soon' as const,
+  },
+  {
+    name: 'Shopify',
+    icon: MessageSquare,
+    description: 'Integração com Shopify (em breve)',
+    href: '#',
+    color: 'green',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-600',
+    borderColor: 'border-green-200',
+    hoverBg: 'hover:bg-green-100',
+    status: 'coming-soon' as const,
+  },
+] as const;
+
 export default function EcommercePage() {
   return (
     <ProtectedRoute>
@@ -16,57 +67,6 @@ export default function EcommercePage() {
 }
 
 function EcommerceContent() {
-  const platforms = [
-    {
-      name: 'Mercado Livre',
-      icon: Package,
-      description: 'Gerencie anúncios, monitore BuyBox e otimize vendas',
-      href: '/ecommerce/mercado-livre',
-      color: 'yellow',
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-600',
-      borderColor: 'border-yellow-200',
-      hoverBg: 'hover:bg-yellow-100',
-      status: 'active'
-    },
-    {
-      name: 'Shopee',
-      icon: ShoppingCart,
-      description: 'Integração com Shopee (em breve)',
-      href: '#',
-      color: 'orange',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-      borderColor: 'border-orange-200',
-      hoverBg: 'hover:bg-orange-100',
-      status: 'coming-soon'
-    },
-    {
-      name: 'Amazon',
-      icon: TrendingUp,
-      description: 'Integração com Amazon (em breve)',
-      href: '#',
-      color: 'blue',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      borderColor: 'border-blue-200',
-      hoverBg: 'hover:bg-blue-100',
-      status: 'coming-soon'
-    },
-    {
-      name: 'Shopify',
-      icon: MessageSquare,
-      description: 'Integração com Shopify (em breve)',
-      href: '#',
-      color: 'green',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-      borderColor: 'border-green-200',
-      hoverBg: 'hover:bg-green-100',
-      status: 'coming-soon'
-    }
-  ];
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -130,13 +130,13 @@ function EcommerceContent() {
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4">Plataformas Disponíveis</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {platforms.map((platform) => {
+            {PLATFORMS.map((platform) => {
               const Icon = platform.icon;
               const isActive = platform.status === 'active';
               
               if (isActive) {
                 return (
-                  <Link key={platform.name} href={platform.href}>
+                  <Link key={platform.name} href={platform.href} prefetch>
                     <Card className={`${platform.bgColor} ${platform.borderColor} border-2 ${platform.hoverBg} transition-all cursor-pointer hover:shadow-lg`}>
                       <CardContent className="p-6">
                         <div className={`${platform.bgColor} p-3 rounded-xl inline-block mb-4 border ${platform.borderColor}`}>

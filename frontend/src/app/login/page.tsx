@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, Button, Input, Alert, Spinner } from '@/components/atoms';
@@ -27,7 +28,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, senha);
-      router.push('/ecommerce');
+      router.replace('/ecommerce');
     } catch (err: unknown) {
       setError('Erro ao fazer login. Verifique suas credenciais.');
     } finally {
@@ -129,6 +130,7 @@ export default function LoginPage() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   leftIcon={<Mail className="h-5 w-5" />}
                   disabled={loading}
                   required
@@ -144,6 +146,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
+                  autoComplete="current-password"
                   leftIcon={<Lock className="h-5 w-5" />}
                   disabled={loading}
                   required
@@ -164,9 +167,9 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Não tem uma conta?{' '}
-                <a href="/registro" className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link href="/registro" className="text-blue-600 hover:text-blue-700 font-medium">
                   Criar conta grátis
-                </a>
+                </Link>
               </p>
             </div>
           </CardContent>

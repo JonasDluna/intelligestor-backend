@@ -5,7 +5,7 @@ import {
   X, Package, DollarSign, Zap, Users, History, 
   Trophy, AlertTriangle, CheckCircle, Bot, Sparkles
 } from 'lucide-react';
-import { mlOfficialService, type OfficialBuyBoxAnalysis, type OfficialCompetitorsResponse } from '../services/mlRealService';
+import { mlOfficialService, type OfficialBuyBoxAnalysis, type OfficialBuyBoxWinner, type OfficialCompetitorsResponse, type CompetitiveAnalysisSummary } from '../services/mlRealService';
 
 interface BuyBoxItem {
   // Dados básicos
@@ -58,7 +58,9 @@ type TabType = 'promocoes' | 'precificacao' | 'automacao' | 'concorrentes' | 'es
 const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
   const [activeTab, setActiveTab] = useState<TabType>('concorrentes');
   const [officialAnalysis, setOfficialAnalysis] = useState<OfficialBuyBoxAnalysis | null>(null);
+  const [winnerData, setWinnerData] = useState<OfficialBuyBoxWinner | null>(null);
   const [officialCompetitors, setOfficialCompetitors] = useState<OfficialCompetitorsResponse | null>(null);
+  const [executiveSummary, setExecutiveSummary] = useState<CompetitiveAnalysisSummary | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Carregar dados OFICIAIS do Mercado Livre
@@ -68,7 +70,7 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
       console.log('🔄 Carregando dados OFICIAIS do ML para:', item.item_id);
       
       // Determinar product_id (se possível extrair do catalog_product_id ou assumir)
-      const productId = item.catalog_product_id || 'MLB1055';
+      const productId = item.catalog_product_id || undefined;
       
       // Carregar análise COMPLETA usando serviço oficial
       const completeAnalysis = await mlOfficialService.getCompetitiveAnalysisComplete(
@@ -78,6 +80,8 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
       
       setOfficialAnalysis(completeAnalysis.buybox_analysis);
       setOfficialCompetitors(completeAnalysis.competitors);
+      setWinnerData(completeAnalysis.current_winner);
+      setExecutiveSummary(completeAnalysis.summary);
       
       console.log('✅ Dados OFICIAIS carregados com sucesso:', {
         analysis: completeAnalysis.buybox_analysis.buybox_status.current_status,
@@ -232,6 +236,119 @@ const BuyBoxModal: React.FC<BuyBoxModalProps> = ({ isOpen, onClose, item }) => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Ganhador oficial do catálogo e como superar */}
+            {winnerData && (
+              <div className="bg-white p-5 rounded-xl border border-indigo-100 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-indigo-500 p-2 rounded-lg">
+                      <Trophy className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Ganhador atual do catálogo</h3>
+                      <p className="text-sm text-gray-600">{winnerData.product_name || 'Produto de catálogo'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">Preço do ganhador</div>
+                    <div className="text-2xl font-bold text-indigo-700">
+                      R$ {winnerData.current_winner.price.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 mb-1">Logística</div>
+                    <div className="text-sm text-gray-900 space-y-1">
+                      <div className={winnerData.current_winner.shipping_advantages.free_shipping ? 'text-green-700 font-medium' : 'text-gray-700'}>
+                        {winnerData.current_winner.shipping_advantages.free_shipping ? 'Frete grátis' : 'Sem frete grátis'}
+                      </div>
+                      <div>{winnerData.current_winner.shipping_advantages.is_fulfillment ? 'Mercado Envios Full' : 'Envio padrão'}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 mb-1">Vendedor</div>
+                    <div className="text-sm text-gray-900 space-y-1">
+                      <div>Seller ID: {winnerData.current_winner.seller_id}</div>
+                      <div className={winnerData.current_winner.is_official_store ? 'text-blue-700 font-medium' : 'text-gray-700'}>
+                        {winnerData.current_winner.is_official_store ? 'Loja oficial' : 'Loja comum'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 mb-1">Gap de preço</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {officialAnalysis?.pricing_analysis.price_to_win
+                        ? `R$ ${officialAnalysis.pricing_analysis.price_to_win.toFixed(2)}`
+                        : 'Calcule a partir do campeão'}
+                    </div>
+                    <div className="text-xs text-gray-600">Alinhe o preço alvo e mantenha estoque ativo</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Ações imediatas para ganhar o catálogo */}
+            {executiveSummary && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Zap className="h-4 w-4 text-green-700" />
+                  <h3 className="text-lg font-semibold text-green-900">Plano rápido para ganhar o catálogo</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ul className="space-y-2">
+                    {(executiveSummary.actions_to_win_catalog.length > 0 ? executiveSummary.actions_to_win_catalog : executiveSummary.immediate_actions).map((action, idx) => (
+                      <li key={idx} className="flex items-start space-x-2 text-sm text-green-900">
+                        <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                        <span>{action}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="space-y-3">
+                    {officialAnalysis?.pricing_analysis.price_to_win && (
+                      <div className="bg-white rounded-lg border border-green-100 p-3">
+                        <div className="text-xs uppercase text-green-700 font-semibold mb-1">Preço alvo</div>
+                        <div className="text-2xl font-bold text-green-900">
+                          R$ {officialAnalysis.pricing_analysis.price_to_win.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-600">Ajuste para este valor ou menor até conquistar o BuyBox</div>
+                      </div>
+                    )}
+                    {officialAnalysis?.competitive_advantages.available_opportunities.length ? (
+                      <div className="bg-white rounded-lg border border-green-100 p-3">
+                        <div className="text-xs uppercase text-green-700 font-semibold mb-2">Ative agora</div>
+                        <div className="space-y-1">
+                          {officialAnalysis.competitive_advantages.available_opportunities.slice(0, 3).map((opp) => (
+                            <div key={opp.id} className="flex items-center justify-between text-sm">
+                              <span>{opp.name}</span>
+                              <span className="text-xs text-green-700">{opp.impact_level}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {executiveSummary?.winner_signals && (
+                      <div className="bg-white rounded-lg border border-green-100 p-3 text-sm text-gray-800 space-y-1">
+                        <div className="text-xs uppercase text-green-700 font-semibold">Vantagens do ganhador</div>
+                        <div className={executiveSummary.winner_signals.free_shipping ? 'text-green-700 font-medium' : 'text-gray-600'}>
+                          {executiveSummary.winner_signals.free_shipping ? 'Frete grátis ativo' : 'Sem frete grátis'}
+                        </div>
+                        <div className={executiveSummary.winner_signals.is_fulfillment ? 'text-green-700 font-medium' : 'text-gray-600'}>
+                          {executiveSummary.winner_signals.is_fulfillment ? 'Usa Mercado Envios Full' : 'Sem Full'}
+                        </div>
+                        <div className={executiveSummary.winner_signals.is_official_store ? 'text-blue-700 font-medium' : 'text-gray-600'}>
+                          {executiveSummary.winner_signals.is_official_store ? 'Loja oficial' : 'Loja comum'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

@@ -6,15 +6,19 @@ import { useSearchParams } from 'next/navigation';
 function CallbackContent() {
   const searchParams = useSearchParams();
 
+  const serializedParams = searchParams.toString();
+
   useEffect(() => {
+    let processingTimer: number | null = null;
     const success = searchParams.get('success');
     const error = searchParams.get('error');
+    const origin = window.location.origin;
 
     if (success === 'true') {
       // Sucesso na autenticação
       if (window.opener) {
         // Se abriu em popup, comunicar com janela pai
-        window.opener.postMessage({ type: 'ML_AUTH_SUCCESS' }, window.location.origin);
+        window.opener.postMessage({ type: 'ML_AUTH_SUCCESS' }, origin);
         window.close();
       } else {
         // Se abriu na mesma aba, redirecionar
@@ -23,23 +27,29 @@ function CallbackContent() {
     } else if (error) {
       // Erro na autenticação
       if (window.opener) {
-        window.opener.postMessage({ type: 'ML_AUTH_ERROR', error }, window.location.origin);
+        window.opener.postMessage({ type: 'ML_AUTH_ERROR', error }, origin);
         window.close();
       } else {
         window.location.href = '/ecommerce/mercado-livre?error=' + encodeURIComponent(error);
       }
     } else {
       // Aguardar processamento
-      setTimeout(() => {
+      processingTimer = window.setTimeout(() => {
         if (window.opener) {
-          window.opener.postMessage({ type: 'ML_AUTH_PROCESSING' }, window.location.origin);
+          window.opener.postMessage({ type: 'ML_AUTH_PROCESSING' }, origin);
           window.close();
         } else {
           window.location.href = '/ecommerce/mercado-livre';
         }
       }, 3000);
     }
-  }, [searchParams]);
+
+    return () => {
+      if (processingTimer) {
+        window.clearTimeout(processingTimer);
+      }
+    };
+  }, [serializedParams, searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

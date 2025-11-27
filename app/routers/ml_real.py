@@ -40,6 +40,7 @@ async def get_buybox_analysis_official(item_id: str):
             "item_id": item_id,
             "analysis_timestamp": datetime.now().isoformat(),
             "api_source": "official_mercadolibre",
+            "catalog_product_id": catalog_product_id,
             
             # Dados do price_to_win (oficial)
             "buybox_status": {

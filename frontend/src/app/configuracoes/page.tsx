@@ -2,7 +2,8 @@
 import AppLayout from '@/components/templates/AppLayout';
 import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
-import { Settings, User, Bell, Shield, Database } from 'lucide-react';
+import { Settings, User, Bell, Shield, Database, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ConfiguracoesPage() {
   return (
@@ -65,8 +66,11 @@ function ConfiguracoesContent() {
                 <Database size={24} className="text-orange-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Integrações</h3>
-                <p className="text-sm text-gray-600">APIs e conexões externas</p>
+                <Link href="/configuracoes/integracoes" className="flex items-center gap-2 group">
+                  <span className="font-semibold text-gray-900 group-hover:text-orange-700">Integrações</span>
+                  <ExternalLink size={16} className="text-orange-500 group-hover:text-orange-700" />
+                </Link>
+                <p className="text-sm text-gray-600">APIs e conexões externas (Mercado Livre OAuth)</p>
               </div>
             </div>
           </div>

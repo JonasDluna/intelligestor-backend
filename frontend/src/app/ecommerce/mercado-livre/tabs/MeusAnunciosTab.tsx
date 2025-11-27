@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { Package, Search, Filter, RefreshCw, ExternalLink } from 'lucide-react';
 import api from '@/lib/api';
@@ -24,30 +24,16 @@ export default function MeusAnunciosTab() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
-    loadAnuncios();
-  }, []);
-
-  const loadAnuncios = async () => {
+  const loadAnuncios = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.mlExtended.listarAnuncios(100);
-      console.log('[DEBUG] Response listarAnuncios:', response);
       
       if (response?.success && Array.isArray(response?.anuncios)) {
         // Validar e filtrar anúncios com dados obrigatórios
-        const validAnuncios = response.anuncios.filter(anuncio => {
-          const isValid = anuncio.ml_id && anuncio.title;
-          if (!isValid) {
-            console.warn('[DEBUG] Anúncio inválido:', anuncio);
-          }
-          return isValid;
-        });
-        
-        console.log('[DEBUG] Anúncios válidos:', validAnuncios.length, 'de', response.anuncios.length);
+        const validAnuncios = response.anuncios.filter((anuncio) => anuncio.ml_id && anuncio.title);
         setAnuncios(validAnuncios);
       } else {
-        console.warn('[DEBUG] Resposta inválida:', response);
         setAnuncios([]);
       }
     } catch (error) {
@@ -56,9 +42,13 @@ export default function MeusAnunciosTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const syncAnuncios = async () => {
+  useEffect(() => {
+    loadAnuncios();
+  }, [loadAnuncios]);
+
+  const syncAnuncios = useCallback(async () => {
     try {
       setSyncing(true);
       await api.mlExtended.sincronizar();
@@ -69,7 +59,7 @@ export default function MeusAnunciosTab() {
     } finally {
       setSyncing(false);
     }
-  };
+  }, [loadAnuncios]);
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; color: string }> = {
@@ -82,10 +72,17 @@ export default function MeusAnunciosTab() {
     return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{label}</span>;
   };
 
-  const filteredAnuncios = anuncios.filter(a =>
-    a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.ml_id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAnuncios = useMemo(() => {
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    if (!normalizedTerm) {
+      return anuncios;
+    }
+    return anuncios.filter(
+      (item) =>
+        item.title.toLowerCase().includes(normalizedTerm) ||
+        item.ml_id.toLowerCase().includes(normalizedTerm),
+    );
+  }, [anuncios, searchTerm]);
 
   return (
     <div className="space-y-6">

@@ -3,73 +3,83 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { TrendingUp, Package, DollarSign, Target, Eye, MessageSquare } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+const DASHBOARD_STATS: Array<{
+  label: string;
+  value: string;
+  change: string;
+  isPositive: boolean;
+  icon: LucideIcon;
+  iconColor: string;
+  iconBg: string;
+}> = [
+  {
+    label: 'Anúncios Ativos',
+    value: '--',
+    change: '+0%',
+    isPositive: true,
+    icon: Package,
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50',
+  },
+  {
+    label: 'Vendas Hoje',
+    value: '--',
+    change: '+0%',
+    isPositive: true,
+    icon: TrendingUp,
+    iconColor: 'text-green-600',
+    iconBg: 'bg-green-50',
+  },
+  {
+    label: 'Faturamento',
+    value: 'R$ --',
+    change: '+0%',
+    isPositive: true,
+    icon: DollarSign,
+    iconColor: 'text-yellow-600',
+    iconBg: 'bg-yellow-50',
+  },
+  {
+    label: 'Perguntas Pendentes',
+    value: '--',
+    change: '0%',
+    isPositive: false,
+    icon: MessageSquare,
+    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-50',
+  },
+  {
+    label: 'Taxa Conversão',
+    value: '--%',
+    change: '+0%',
+    isPositive: true,
+    icon: Target,
+    iconColor: 'text-pink-600',
+    iconBg: 'bg-pink-50',
+  },
+  {
+    label: 'Visualizações',
+    value: '--',
+    change: '+0%',
+    isPositive: true,
+    icon: Eye,
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-50',
+  },
+];
 
 export default function DashboardTab() {
-  const stats = [
-    {
-      label: 'Anúncios Ativos',
-      value: '--',
-      change: '+0%',
-      isPositive: true,
-      icon: Package,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50'
-    },
-    {
-      label: 'Vendas Hoje',
-      value: '--',
-      change: '+0%',
-      isPositive: true,
-      icon: TrendingUp,
-      iconColor: 'text-green-600',
-      iconBg: 'bg-green-50'
-    },
-    {
-      label: 'Faturamento',
-      value: 'R$ --',
-      change: '+0%',
-      isPositive: true,
-      icon: DollarSign,
-      iconColor: 'text-yellow-600',
-      iconBg: 'bg-yellow-50'
-    },
-    {
-      label: 'Perguntas Pendentes',
-      value: '--',
-      change: '0%',
-      isPositive: false,
-      icon: MessageSquare,
-      iconColor: 'text-purple-600',
-      iconBg: 'bg-purple-50'
-    },
-    {
-      label: 'Taxa Conversão',
-      value: '--%',
-      change: '+0%',
-      isPositive: true,
-      icon: Target,
-      iconColor: 'text-pink-600',
-      iconBg: 'bg-pink-50'
-    },
-    {
-      label: 'Visualizações',
-      value: '--',
-      change: '+0%',
-      isPositive: true,
-      icon: Eye,
-      iconColor: 'text-indigo-600',
-      iconBg: 'bg-indigo-50'
-    }
-  ];
 
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {stats.map((stat, index) => {
+        {DASHBOARD_STATS.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div key={stat.label} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className={`${stat.iconBg} p-3 rounded-xl`}>
                   <Icon className={`h-6 w-6 ${stat.iconColor}`} />

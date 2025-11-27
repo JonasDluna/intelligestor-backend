@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { DollarSign, Package, TrendingUp, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
@@ -21,48 +21,57 @@ export default function VendasTab() {
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadVendas();
-  }, []);
-
-  const loadVendas = async () => {
+  const loadVendas = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.mlExtended.vendas(50);
-      console.log('[DEBUG] Response vendas:', response);
       if (response?.success && response?.vendas) {
         setVendas(response.vendas);
-      } else {
-        console.warn('[DEBUG] Resposta inválida vendas:', response);
       }
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadVendas();
+  }, [loadVendas]);
 
   // Estatísticas
-  const vendasHoje = vendas.filter(v => {
-    const hoje = new Date().toDateString();
-    const vendaDate = new Date(v.date_created).toDateString();
-    return hoje === vendaDate;
-  }).length;
+  const { vendasHoje, faturamentoHoje, pendentes, totalVendas, taxaConversao } = useMemo(() => {
+    const today = new Date().toDateString();
+    let vendasHojeCount = 0;
+    let faturamento = 0;
+    let pendentesCount = 0;
+    let pagosCount = 0;
 
-  const faturamentoHoje = vendas
-    .filter(v => {
-      const hoje = new Date().toDateString();
-      const vendaDate = new Date(v.date_created).toDateString();
-      return hoje === vendaDate;
-    })
-    .reduce((acc, v) => acc + v.total_amount, 0);
+    vendas.forEach((venda) => {
+      const vendaDate = new Date(venda.date_created).toDateString();
+      if (vendaDate === today) {
+        vendasHojeCount += 1;
+        faturamento += venda.total_amount;
+      }
+      if (venda.status === 'pending' || venda.status === 'pending_payment') {
+        pendentesCount += 1;
+      }
+      if (venda.status === 'paid') {
+        pagosCount += 1;
+      }
+    });
 
-  const pendentes = vendas.filter(v => 
-    v.status === 'pending' || v.status === 'pending_payment'
-  ).length;
+    const total = vendas.length;
+    const taxa = total > 0 ? ((pagosCount / total) * 100).toFixed(1) : '0.0';
 
-  const totalVendas = vendas.length;
-  const taxaConversao = totalVendas > 0 ? ((vendas.filter(v => v.status === 'paid').length / totalVendas) * 100).toFixed(1) : '0.0';
+    return {
+      vendasHoje: vendasHojeCount,
+      faturamentoHoje: faturamento,
+      pendentes: pendentesCount,
+      totalVendas: total,
+      taxaConversao: taxa,
+    };
+  }, [vendas]);
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; color: string }> = {

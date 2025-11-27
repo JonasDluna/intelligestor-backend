@@ -1,13 +1,16 @@
 /**
  * Serviço OFICIAL de integração com Mercado Livre
- * Conecta com APIs reais: price_to_win, products, competitors
+ * Conecta com APIs reais: price_to_win, products, competidores
  */
+
+import axiosInstance, { ApiResponse } from '@/lib/axios';
 
 // Interfaces para APIs OFICIAIS do ML
 export interface OfficialBuyBoxAnalysis {
   item_id: string;
   analysis_timestamp: string;
   api_source: 'official_mercadolibre';
+  catalog_product_id?: string;
   
   buybox_status: {
     current_status: 'winning' | 'competing' | 'sharing_first_place' | 'listed';
@@ -31,7 +34,28 @@ export interface OfficialBuyBoxAnalysis {
       urgency: 'alta' | 'média' | 'baixa';
     } | null;
   };
-  
+
+  product_context?: {
+    product_id?: string;
+    product_name?: string;
+    permalink?: string;
+    winner?: OfficialBuyBoxWinner['current_winner'];
+    price_range?: OfficialBuyBoxWinner['price_range'];
+    activation_date?: string;
+  };
+
+  competitors_summary?: {
+    total_competitors: number;
+    top_competitors: OfficialCompetitor[];
+    competitor_price_range?: {
+      min_price: number;
+      max_price: number;
+      avg_price: number;
+      median_price: number;
+      price_spread: number;
+    } | null;
+  };
+
   competitive_advantages: {
     active_boosts: Array<{
       id: string;
@@ -184,32 +208,57 @@ export interface OfficialBuyBoxWinner {
   analysis_timestamp: string;
 }
 
+type ApiData<T> = ApiResponse<T> | T;
+
+const unwrapApiData = <T>(payload: ApiData<T>): T => {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return (payload as ApiResponse<T>).data ?? (payload as T);
+  }
+  return payload as T;
+};
+
+interface OfficialCompetitorOptions {
+  limit?: number;
+  shipping_cost?: 'free';
+  official_store?: 'all';
+  price_range?: string;
+}
+
+export interface CompetitiveAnalysisSummary {
+  status: string;
+  urgency: string;
+  competitive_level: string;
+  immediate_actions: string[];
+  market_position: string;
+  actions_to_win_catalog: string[];
+  price_to_win_target?: number | null;
+  winner_signals?: {
+    free_shipping: boolean;
+    is_fulfillment: boolean;
+    is_official_store: boolean;
+  };
+}
+
+interface CompetitiveAnalysisResult {
+  buybox_analysis: OfficialBuyBoxAnalysis;
+  competitors: OfficialCompetitorsResponse | null;
+  current_winner: OfficialBuyBoxWinner | null;
+  summary: CompetitiveAnalysisSummary;
+}
+
 class MLOfficialService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   /**
    * Obter análise OFICIAL do BuyBox usando price_to_win
    */
   async getBuyBoxAnalysisOfficial(itemId: string): Promise<OfficialBuyBoxAnalysis> {
     try {
-      const response = await fetch(`${this.baseUrl}/ml/buybox/analysis/${itemId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro na análise oficial: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Análise OFICIAL do BuyBox carregada:', data);
-      return data;
-
+      const { data } = await axiosInstance.get<ApiResponse<OfficialBuyBoxAnalysis>>(
+        `/ml/buybox/analysis/${itemId}`
+      );
+      return unwrapApiData(data);
     } catch (error) {
-      console.error('❌ Erro ao carregar análise oficial:', error);
+      console.error('Erro ao carregar análise oficial do BuyBox', error);
       throw error;
     }
   }
@@ -218,41 +267,25 @@ class MLOfficialService {
    * Obter competidores OFICIAIS usando /products/{product_id}/items
    */
   async getCompetitorsOfficial(
-    productId: string, 
-    options: {
-      limit?: number;
-      shipping_cost?: 'free';
-      official_store?: 'all';
-      price_range?: string;
-    } = {}
+    productId: string,
+    options: OfficialCompetitorOptions = {}
   ): Promise<OfficialCompetitorsResponse> {
     try {
-      const params = new URLSearchParams();
-      
-      if (options.limit) params.append('limit', options.limit.toString());
-      if (options.shipping_cost) params.append('shipping_cost', options.shipping_cost);
-      if (options.official_store) params.append('official_store', options.official_store);
-      if (options.price_range) params.append('price_range', options.price_range);
-      
-      const url = `${this.baseUrl}/ml/competitors/official/${productId}?${params}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const params = {
+        ...(options.limit ? { limit: options.limit } : {}),
+        ...(options.shipping_cost ? { shipping_cost: options.shipping_cost } : {}),
+        ...(options.official_store ? { official_store: options.official_store } : {}),
+        ...(options.price_range ? { price_range: options.price_range } : {}),
+      };
 
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar competidores oficiais: ${response.statusText}`);
-      }
+      const { data } = await axiosInstance.get<ApiResponse<OfficialCompetitorsResponse>>(
+        `/ml/competitors/official/${productId}`,
+        { params }
+      );
 
-      const data = await response.json();
-      console.log('✅ Competidores OFICIAIS carregados:', data);
-      return data;
-
+      return unwrapApiData(data);
     } catch (error) {
-      console.error('❌ Erro ao carregar competidores oficiais:', error);
+      console.error('Erro ao carregar competidores oficiais', error);
       throw error;
     }
   }
@@ -262,23 +295,12 @@ class MLOfficialService {
    */
   async getBuyBoxWinnerOfficial(productId: string): Promise<OfficialBuyBoxWinner> {
     try {
-      const response = await fetch(`${this.baseUrl}/ml/product/winner/${productId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar ganhador oficial: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Ganhador OFICIAL carregado:', data);
-      return data;
-
+      const { data } = await axiosInstance.get<ApiResponse<OfficialBuyBoxWinner>>(
+        `/ml/product/winner/${productId}`
+      );
+      return unwrapApiData(data);
     } catch (error) {
-      console.error('❌ Erro ao carregar ganhador oficial:', error);
+      console.error('Erro ao carregar ganhador oficial', error);
       throw error;
     }
   }
@@ -286,58 +308,43 @@ class MLOfficialService {
   /**
    * Análise competitiva COMPLETA usando todas as APIs oficiais
    */
-  async getCompetitiveAnalysisComplete(itemId: string, productId?: string): Promise<{
-    buybox_analysis: OfficialBuyBoxAnalysis;
-    competitors: OfficialCompetitorsResponse | null;
-    current_winner: OfficialBuyBoxWinner | null;
-    summary: {
-      status: string;
-      urgency: string;
-      competitive_level: string;
-      immediate_actions: string[];
-      market_position: string;
-    };
-  }> {
+  async getCompetitiveAnalysisComplete(itemId: string, productId?: string): Promise<CompetitiveAnalysisResult> {
     try {
-      console.log('🔄 Iniciando análise competitiva completa...');
-      
-      // 1. Análise do BuyBox
       const buyboxAnalysis = await this.getBuyBoxAnalysisOfficial(itemId);
-      
-      // 2. Competidores (se product_id disponível)
-      let competitorsData = null;
-      if (productId) {
+      const resolvedProductId =
+        productId ||
+        buyboxAnalysis.catalog_product_id ||
+        buyboxAnalysis.product_context?.product_id ||
+        buyboxAnalysis.competitors_summary?.top_competitors?.[0]?.item_id;
+
+      let competitorsData: OfficialCompetitorsResponse | null = null;
+      if (resolvedProductId) {
         try {
-          competitorsData = await this.getCompetitorsOfficial(productId, { limit: 20 });
+          competitorsData = await this.getCompetitorsOfficial(resolvedProductId, { limit: 20 });
         } catch (error) {
-          console.warn('⚠️ Não foi possível carregar competidores:', error);
+          console.warn('Não foi possível carregar competidores oficiais', error);
         }
       }
-      
-      // 3. Ganhador atual (se product_id disponível)
-      let winnerData = null;
-      if (productId) {
+
+      let winnerData: OfficialBuyBoxWinner | null = null;
+      if (resolvedProductId) {
         try {
-          winnerData = await this.getBuyBoxWinnerOfficial(productId);
+          winnerData = await this.getBuyBoxWinnerOfficial(resolvedProductId);
         } catch (error) {
-          console.warn('⚠️ Não foi possível carregar ganhador:', error);
+          console.warn('Não foi possível carregar ganhador oficial', error);
         }
       }
-      
-      // 4. Resumo executivo
+
       const summary = this.generateExecutiveSummary(buyboxAnalysis, competitorsData, winnerData);
-      
-      console.log('✅ Análise competitiva completa concluída');
-      
+
       return {
         buybox_analysis: buyboxAnalysis,
         competitors: competitorsData,
         current_winner: winnerData,
-        summary
+        summary,
       };
-
     } catch (error) {
-      console.error('❌ Erro na análise competitiva completa:', error);
+      console.error('Erro na análise competitiva completa', error);
       throw error;
     }
   }
@@ -349,7 +356,7 @@ class MLOfficialService {
     buyboxAnalysis: OfficialBuyBoxAnalysis,
     competitorsData: OfficialCompetitorsResponse | null,
     winnerData: OfficialBuyBoxWinner | null
-  ) {
+  ): CompetitiveAnalysisSummary {
     const status = buyboxAnalysis.buybox_status.current_status;
     const competitiveLevel = buyboxAnalysis.competitive_analysis.competitive_level;
     const urgency = buyboxAnalysis.competitive_analysis.urgency;
@@ -368,11 +375,13 @@ class MLOfficialService {
     
     // Ações imediatas
     const immediateActions = [];
+    const catalogActions = [];
     
     if (buyboxAnalysis.pricing_analysis.price_adjustment_needed) {
       const priceToWin = buyboxAnalysis.pricing_analysis.price_to_win;
       if (priceToWin) {
         immediateActions.push(`Ajustar preço para R$ ${priceToWin.toFixed(2)}`);
+        catalogActions.push(`Coloque o preço em R$ ${priceToWin.toFixed(2)} ou abaixo até vencer o BuyBox`);
       }
     }
     
@@ -380,29 +389,50 @@ class MLOfficialService {
     const opportunities = buyboxAnalysis.competitive_advantages.available_opportunities;
     opportunities.slice(0, 2).forEach(boost => {
       immediateActions.push(`Ativar ${boost.name}`);
+      catalogActions.push(`Ative o boost ${boost.name} (${boost.impact_level})`);
     });
     
     // Adicionar recomendações estratégicas
     buyboxAnalysis.strategic_recommendations.slice(0, 1).forEach(rec => {
       immediateActions.push(rec);
+      catalogActions.push(rec);
     });
-    
-    // Usar dados dos competidores se disponíveis
-    if (competitorsData) {
-      console.log(`💡 Análise considera ${competitorsData.total_competitors} competidores`);
+
+    // Ações baseadas no winner oficial do catálogo
+    const winnerLogistics = {
+      free_shipping: winnerData?.current_winner?.shipping_advantages?.free_shipping ?? false,
+      is_fulfillment: winnerData?.current_winner?.shipping_advantages?.is_fulfillment ?? false,
+      is_official_store: winnerData?.current_winner?.is_official_store ?? false,
+    };
+
+    if (winnerLogistics.free_shipping) {
+      catalogActions.push('Habilite frete grátis para igualar o ganhador');
     }
-    
-    // Usar dados do ganhador atual se disponíveis  
-    if (winnerData) {
-      console.log(`🏆 Ganhador atual identificado: ${winnerData.current_winner.item_id}`);
+
+    if (winnerLogistics.is_fulfillment) {
+      catalogActions.push('Ative Mercado Envios Full (fulfillment) para competir em logística');
     }
+
+    if (winnerLogistics.is_official_store) {
+      catalogActions.push('Considere oficializar a loja ou reforçar reputação para competir com loja oficial');
+    }
+
+    // Corrigir motivos de bloqueio (se existirem)
+    if (Array.isArray(buyboxAnalysis.blocking_reasons) && buyboxAnalysis.blocking_reasons.length) {
+      catalogActions.push('Resolva os bloqueios listados para entrar no BuyBox');
+    }
+
+    const uniqueCatalogActions = Array.from(new Set(catalogActions)).slice(0, 5);
     
     return {
       status,
       urgency,
       competitive_level: competitiveLevel,
       immediate_actions: immediateActions.slice(0, 3),
-      market_position: marketPosition
+      market_position: marketPosition,
+      actions_to_win_catalog: uniqueCatalogActions,
+      price_to_win_target: buyboxAnalysis.pricing_analysis.price_to_win,
+      winner_signals: winnerLogistics,
     };
   }
 

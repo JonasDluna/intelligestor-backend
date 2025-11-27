@@ -1,14 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AppLayout from '@/components/templates/AppLayout';
 import ProtectedRoute from '@/components/templates/ProtectedRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
-import { 
-  LayoutDashboard, Package, Target, MessageSquare, ShoppingCart, 
-  ArrowLeft, CheckCircle2, LogOut, Link as LinkIcon, AlertCircle,
-  BookOpen
+import {
+  LayoutDashboard,
+  Package,
+  Target,
+  MessageSquare,
+  ShoppingCart,
+  ArrowLeft,
+  CheckCircle2,
+  LogOut,
+  Link as LinkIcon,
+  AlertCircle,
+  BookOpen,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
@@ -22,6 +31,17 @@ import CatalogoTab from './tabs/CatalogoTab';
 
 type TabType = 'dashboard' | 'anuncios' | 'catalogo' | 'buybox' | 'perguntas' | 'vendas';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
+const TABS: Array<{ id: TabType; label: string; icon: LucideIcon }> = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'anuncios', label: 'Meus Anúncios', icon: Package },
+  { id: 'catalogo', label: 'Catálogo ML', icon: BookOpen },
+  { id: 'buybox', label: 'Monitor BuyBox', icon: Target },
+  { id: 'perguntas', label: 'Perguntas', icon: MessageSquare },
+  { id: 'vendas', label: 'Vendas', icon: ShoppingCart },
+];
+
 export default function MercadoLivrePage() {
   return (
     <ProtectedRoute>
@@ -32,12 +52,150 @@ export default function MercadoLivrePage() {
 
 function MercadoLivreContent() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mlUserData, setMlUserData] = useState<{ nickname?: string; ml_user_id?: string } | null>(null);
   const [backendVersion, setBackendVersion] = useState<string>('');
+  const popupIntervalRef = useRef<number | null>(null);
+  const popupFallbackRef = useRef<number | null>(null);
+
+  const clearPopupWatchers = useCallback(() => {
+    if (popupIntervalRef.current) {
+      window.clearInterval(popupIntervalRef.current);
+      popupIntervalRef.current = null;
+    }
+    if (popupFallbackRef.current) {
+      window.clearTimeout(popupFallbackRef.current);
+      popupFallbackRef.current = null;
+    }
+  }, []);
+
+  const checkBackendVersion = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ml/health`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.version) {
+          setBackendVersion(data.version);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar versão backend:', error);
+    }
+  }, []);
+
+  const checkMLConnection = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      if (!token) {
+        setIsConnected(false);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/ml/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(data.connected);
+        if (data.connected) {
+          setMlUserData({
+            nickname: data.nickname,
+            ml_user_id: data.ml_user_id
+          });
+        } else {
+          setMlUserData(null);
+        }
+      } else {
+        setIsConnected(false);
+        setMlUserData(null);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar conexão ML:', error);
+      setIsConnected(false);
+      setMlUserData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const connectToML = useCallback(() => {
+    if (!userId) return;
+
+    const authUrl = `${API_BASE_URL}/auth/ml/login?user_id=${userId}`;
+
+    // Criar janela popup para autenticação
+    const popup = window.open(
+      authUrl,
+      'ml-auth',
+      'width=600,height=700,left=' + (window.screen.width / 2 - 300) + ',top=' + (window.screen.height / 2 - 350),
+    );
+
+    if (!popup) {
+      alert('Não foi possível abrir o popup de autenticação. Verifique o bloqueador de pop-ups.');
+      return;
+    }
+
+    clearPopupWatchers();
+
+    // Monitorar a janela popup
+    popupIntervalRef.current = window.setInterval(() => {
+      if (popup.closed) {
+        clearPopupWatchers();
+        window.setTimeout(() => {
+          checkMLConnection();
+        }, 2000);
+      }
+    }, 1000);
+
+    // Fallback: verificar após 30 segundos mesmo se a janela não fechar
+    popupFallbackRef.current = window.setTimeout(() => {
+      clearPopupWatchers();
+      if (!popup.closed) {
+        popup.close();
+      }
+      checkMLConnection();
+    }, 30000);
+  }, [checkMLConnection, clearPopupWatchers, userId]);
+
+  const disconnectFromML = useCallback(async () => {
+    if (!confirm('Tem certeza que deseja desconectar sua conta do Mercado Livre?')) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await fetch(`${API_BASE_URL}/ml/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setIsConnected(false);
+        setMlUserData(null);
+        checkMLConnection();
+      } else {
+        alert('❌ Erro ao desconectar. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao desconectar ML:', error);
+      alert('❌ Erro ao desconectar. Tente novamente.');
+    } finally {
+      setIsDisconnecting(false);
+    }
+  }, [checkMLConnection]);
 
   useEffect(() => {
     if (user) {
@@ -59,143 +217,11 @@ function MercadoLivreContent() {
     };
 
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [user]);
-
-  const checkBackendVersion = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/health`);
-      if (response.ok) {
-        const data = await response.json();
-        setBackendVersion(data.version);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar versão backend:', error);
-    }
-  };
-
-  const checkMLConnection = async () => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      console.log('[DEBUG] Verificando conexão ML, token:', token ? 'existe' : 'não existe');
-      
-      if (!token) {
-        console.log('[DEBUG] Sem token, definindo como desconectado');
-        setIsConnected(false);
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      console.log('[DEBUG] Status response:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('[DEBUG] Status data:', data);
-        
-        setIsConnected(data.connected);
-        if (data.connected) {
-          setMlUserData({
-            nickname: data.nickname,
-            ml_user_id: data.ml_user_id
-          });
-          console.log('[DEBUG] Conectado como:', data.nickname);
-        } else {
-          console.log('[DEBUG] ML não conectado');
-          setMlUserData(null);
-        }
-      } else {
-        console.log('[DEBUG] Erro na resposta:', response.status);
-        setIsConnected(false);
-        setMlUserData(null);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar conexão ML:', error);
-      setIsConnected(false);
-      setMlUserData(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const connectToML = () => {
-    if (user?.id) {
-      const authUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/ml/login?user_id=${user.id}`;
-      
-      // Criar janela popup para autenticação
-      const popup = window.open(
-        authUrl, 
-        'ml-auth', 
-        'width=600,height=700,left=' + (window.screen.width / 2 - 300) + ',top=' + (window.screen.height / 2 - 350)
-      );
-      
-      // Monitorar a janela popup
-      const checkClosed = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(checkClosed);
-          // Aguardar um pouco e verificar conexão
-          setTimeout(() => {
-            checkMLConnection();
-          }, 2000);
-        }
-      }, 1000);
-      
-      // Fallback: verificar após 30 segundos mesmo se a janela não fechar
-      setTimeout(() => {
-        clearInterval(checkClosed);
-        if (!popup?.closed) {
-          popup?.close();
-        }
-        checkMLConnection();
-      }, 30000);
-    }
-  };
-
-  const disconnectFromML = async () => {
-    if (!confirm('Tem certeza que deseja desconectar sua conta do Mercado Livre?')) {
-      return;
-    }
-
-    setIsDisconnecting(true);
-    try {
-      const token = localStorage.getItem('auth_token');
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setIsConnected(false);
-        setMlUserData(null);
-        // Forçar atualização da página automaticamente
-        window.location.reload();
-      } else {
-        alert('❌ Erro ao desconectar. Tente novamente.');
-      }
-    } catch (error) {
-      console.error('Erro ao desconectar ML:', error);
-      alert('❌ Erro ao desconectar. Tente novamente.');
-    } finally {
-      setIsDisconnecting(false);
-    }
-  };
-
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'anuncios', label: 'Meus Anúncios', icon: Package },
-    { id: 'catalogo', label: 'Catálogo ML', icon: BookOpen },
-    { id: 'buybox', label: 'Monitor BuyBox', icon: Target },
-    { id: 'perguntas', label: 'Perguntas', icon: MessageSquare },
-    { id: 'vendas', label: 'Vendas', icon: ShoppingCart }
-  ];
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearPopupWatchers();
+    };
+  }, [checkBackendVersion, checkMLConnection, clearPopupWatchers, user]);
 
   return (
     <AppLayout>
@@ -268,7 +294,7 @@ function MercadoLivreContent() {
         {isConnected && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
             <div className="flex gap-2 overflow-x-auto">
-              {tabs.map((tab) => {
+              {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 

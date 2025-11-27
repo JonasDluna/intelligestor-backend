@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { TrendingUp, RefreshCw, ExternalLink, Award, ChevronRight, Info } from 'lucide-react';
-import api from '@/lib/api';
 import axiosInstance from '@/lib/axios';
 import { formatCurrency } from '@/utils/currencyUtils';
-import BuyBoxModal from '../../../../components/BuyBoxModal';
+import { getFirstSecureImage } from '@/utils/imageUtils';
+import BuyBoxModal from '@/components/BuyBoxModal';
 
 interface BuyBoxItem {
   // Dados básicos
@@ -71,47 +71,41 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   // Função para gerar o link correto do catálogo do Mercado Livre
-  const getCatalogUrl = (item: BuyBoxItem): string | null => {
+  const getCatalogUrl = useCallback((item: BuyBoxItem): string | null => {
     if (!item.catalog_product_id) return null;
-    
-    // Gerar slug do título do produto
+
     const slug = item.title
       ?.toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-      .replace(/[^\w\s-]/g, '') // Remove caracteres especiais
-      .replace(/\s+/g, '-') // Substitui espaços por hífens
-      .replace(/-+/g, '-') // Remove hífens duplicados
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
       .trim();
-    
+
     if (!slug) {
-      // Fallback para formato simples se não tiver título
       return `https://www.mercadolivre.com.br/p/${item.catalog_product_id}`;
     }
-    
-    // Formato correto: https://www.mercadolivre.com.br/{slug}/p/{catalog_id}
-    const url = `https://www.mercadolivre.com.br/${slug}/p/${item.catalog_product_id}`;
-    console.log(`🔗 Link do catálogo gerado para ${item.ml_id}:`, url);
-    return url;
-  };
 
-  const openModal = (item: BuyBoxItem) => {
-    console.log('🔍 Abrindo modal para item:', item.ml_id, item.title);
-    setSelectedItem(item);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    console.log('❌ Fechando modal');
-    setSelectedItem(null);
-    setModalOpen(false);
-  };
-
-  useEffect(() => {
-    loadBuyBoxData();
+    return `https://www.mercadolivre.com.br/${slug}/p/${item.catalog_product_id}`;
   }, []);
 
-  const loadBuyBoxData = async () => {
+  const openModal = useCallback((item: BuyBoxItem) => {
+    setSelectedItem(item);
+    setModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setSelectedItem(null);
+    setModalOpen(false);
+  }, []);
+
+  const loadBuyBoxData = useCallback(async () => {
+    if (!userId) {
+      setItems([]);
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -120,10 +114,7 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
         params: { user_id: userId }
       });
       
-      console.log('[DEBUG] Response catalogItems:', catalogResponse.data);
-      
       if (!catalogResponse?.data?.catalog_items || catalogResponse.data.status !== 'success') {
-        console.warn('[DEBUG] Catálogo vazio ou inválido:', catalogResponse.data);
         setItems([]);
         return;
       }
@@ -153,16 +144,6 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
               calculatedPriceToWin = championPriceValue - 0.01;
             }
             
-            console.log(`📦 Dados BuyBox para ${item.ml_id}:`, {
-              catalog_product_id: data.catalog_product_id || item.catalog_product_id,
-              current_price: data.current_price,
-              champion_price: championPriceValue,
-              winner_price: winnerPrice,
-              price_to_win_api: priceToWinValue,
-              price_to_win_calculated: calculatedPriceToWin,
-              status: data.status
-            });
-            
             // Mapear novos campos para compatibilidade
             return {
               ...data,
@@ -186,7 +167,7 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
                 boosted: [],
                 opportunities: [],
                 not_boosted: [],
-                not_apply: []
+                not_apply: [],
               },
               winner: data.winner,
               reason: data.reason || [],
@@ -196,10 +177,23 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
               winner_price_difference_percent: data.winner_price_difference_percent,
               updated_at: data.updated_at || new Date().toISOString(),
               // Dados adicionais do catálogo
-              pictures: item.pictures || [],
+              pictures: Array.isArray(item.pictures)
+                ? item.pictures
+                    .map((pic: unknown) => {
+                      if (typeof pic === 'string') return pic;
+                      if (pic && typeof pic === 'object' && 'secure_url' in (pic as Record<string, unknown>)) {
+                        return (pic as { secure_url?: string }).secure_url;
+                      }
+                      if (pic && typeof pic === 'object' && 'url' in (pic as Record<string, unknown>)) {
+                        return (pic as { url?: string }).url;
+                      }
+                      return null;
+                    })
+                    .filter((url): url is string => Boolean(url))
+                : [],
               permalink: item.permalink || null,
               sold_quantity: item.sold_quantity || 0,
-              available_quantity: item.available_quantity || 0
+              available_quantity: item.available_quantity || 0,
             };
           }
           return null;
@@ -212,19 +206,23 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
       const buyboxData = await Promise.all(buyboxPromises);
       const validData = buyboxData.filter(d => d !== null && d.has_catalog);
       
-      setItems(validData);
+      setItems(validData as BuyBoxItem[]);
     } catch (error) {
       console.error('Erro ao carregar dados BuyBox:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const handleRefresh = async () => {
+  useEffect(() => {
+    loadBuyBoxData();
+  }, [loadBuyBoxData]);
+
+  const handleRefresh = useCallback(async () => {
     setUpdating(true);
     await loadBuyBoxData();
     setUpdating(false);
-  };
+  }, [loadBuyBoxData]);
 
   const getStatusBadge = (item: BuyBoxItem) => {
     const { status, reason = [] } = item;
@@ -283,24 +281,16 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
     }
   };
 
-  const formatTimeSince = (isoDate: string) => {
-    const date = new Date(isoDate);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins} min atrás`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h atrás`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d atrás`;
-  };
-
-  // Estatísticas
-  const totalMonitorados = items.length;
-  const ganhandoBuyBox = items.filter(i => i.is_winner).length;
-  const perdendoBuyBox = items.filter(i => !i.is_winner && i.champion_price).length;
+  const { totalMonitorados, ganhandoBuyBox, perdendoBuyBox } = useMemo(() => {
+    const total = items.length;
+    const winners = items.filter((i) => i.is_winner).length;
+    const losing = items.filter((i) => !i.is_winner && i.champion_price).length;
+    return {
+      totalMonitorados: total,
+      ganhandoBuyBox: winners,
+      perdendoBuyBox: losing,
+    };
+  }, [items]);
 
   return (
     <div className="space-y-6">
@@ -355,20 +345,23 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {items.map((item) => (
-                    <tr 
-                      key={item.ml_id} 
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => openModal(item)}
-                    >
+                  {items.map((item) => {
+                    const coverImage = getFirstSecureImage(item.pictures);
+                    return (
+                      <tr
+                        key={item.ml_id}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => openModal(item)}
+                      >
                       {/* Foto */}
                       <td className="px-6 py-4">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                          {item.pictures && item.pictures.length > 0 ? (
+                          {coverImage ? (
                             <img 
-                              src={item.pictures[0].url} 
+                              src={coverImage} 
                               alt={item.title || 'Produto'}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="text-gray-400 text-xs text-center">Sem foto</div>
@@ -451,7 +444,8 @@ export default function MonitorBuyBoxTab({ userId }: MonitorBuyBoxTabProps) {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>

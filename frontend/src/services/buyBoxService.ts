@@ -1,5 +1,3 @@
-'use client';
-
 import axiosInstance from '@/lib/axios';
 
 export interface BuyBoxData {
@@ -31,22 +29,24 @@ export interface PriceSimulation {
   };
 }
 
+interface CatalogItem {
+  ml_id: string;
+  title?: string;
+  price?: number;
+  cost?: number;
+}
+
 class BuyBoxService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   async getCatalogItems(userId: string): Promise<BuyBoxData[]> {
     try {
-      console.log('📦 Buscando itens do catálogo...');
-      
       const response = await axiosInstance.get(`/api/catalog/items`, {
         params: { user_id: userId }
       });
 
       if (response.data.status === 'success' && response.data.catalog_items) {
-        console.log(`✅ ${response.data.catalog_items.length} itens encontrados`);
-        
         // Buscar dados de BuyBox para cada item
-        const buyBoxPromises = response.data.catalog_items.map(async (item: any) => {
+        const buyBoxPromises = response.data.catalog_items.map(async (item: CatalogItem) => {
           try {
             const buyBoxResponse = await axiosInstance.get(`/api/catalog/buybox/${item.ml_id}`, {
               params: { user_id: userId }
@@ -77,7 +77,7 @@ class BuyBoxService {
         });
 
         const buyBoxResults = await Promise.all(buyBoxPromises);
-        return buyBoxResults.filter(item => item !== null);
+        return buyBoxResults.filter((item): item is BuyBoxData => Boolean(item));
       }
       
       return [];
@@ -89,8 +89,6 @@ class BuyBoxService {
 
   async getBuyBoxDetails(itemId: string, userId: string): Promise<BuyBoxData | null> {
     try {
-      console.log(`🔍 Buscando detalhes BuyBox para ${itemId}...`);
-      
       const response = await axiosInstance.get(`/api/catalog/buybox/${itemId}`, {
         params: { user_id: userId }
       });
@@ -108,8 +106,6 @@ class BuyBoxService {
 
   async simulatePrice(itemId: string, newPrice: number, userId: string): Promise<PriceSimulation> {
     try {
-      console.log(`💰 Simulando preço R$ ${newPrice} para ${itemId}...`);
-      
       const response = await axiosInstance.post(`/api/catalog/simulate-price`, {
         item_id: itemId,
         new_price: newPrice,
@@ -131,8 +127,6 @@ class BuyBoxService {
 
   async updatePrice(itemId: string, newPrice: number, userId: string): Promise<boolean> {
     try {
-      console.log(`💲 Atualizando preço para R$ ${newPrice} - Item ${itemId}...`);
-      
       const response = await axiosInstance.post(`/api/catalog/update-price`, {
         item_id: itemId,
         new_price: newPrice,
@@ -140,7 +134,6 @@ class BuyBoxService {
       });
 
       if (response.data.status === 'success') {
-        console.log('✅ Preço atualizado com sucesso!');
         return true;
       } else {
         throw new Error(response.data.message || 'Erro ao atualizar preço');
@@ -158,8 +151,6 @@ class BuyBoxService {
     recommendations: string[];
   }> {
     try {
-      console.log(`📈 Buscando tendências de mercado para ${itemId}...`);
-      
       const response = await axiosInstance.get(`/api/market/trends/${itemId}`, {
         params: { user_id: userId }
       });
@@ -177,15 +168,16 @@ class BuyBoxService {
     }
   }
 
-  async createAutomationRule(rule: {
-    name: string;
-    conditions: Record<string, any>;
-    actions: Record<string, any>;
-    enabled: boolean;
-  }, userId: string): Promise<string> {
+  async createAutomationRule(
+    rule: {
+      name: string;
+      conditions: Record<string, unknown>;
+      actions: Record<string, unknown>;
+      enabled: boolean;
+    },
+    userId: string,
+  ): Promise<string> {
     try {
-      console.log('🤖 Criando regra de automação:', rule.name);
-      
       const response = await axiosInstance.post(`/api/automation/rules`, {
         ...rule,
         user_id: userId
@@ -203,7 +195,9 @@ class BuyBoxService {
   }
 
   private calculateProfitMargin(price: number, cost: number): number {
-    if (!cost || cost === 0) return 0;
+    if (!price || price === 0 || cost === 0) {
+      return 0;
+    }
     return ((price - cost) / price) * 100;
   }
 

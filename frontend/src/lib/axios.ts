@@ -4,7 +4,14 @@
 import axios, { AxiosError } from 'axios';
 
 // Base URL da API - sem /v1 pois o backend não usa esse prefixo
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const IS_BROWSER = typeof window !== 'undefined';
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
+// Base URL prioritiza produção para evitar CORS/localhost
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL_PRODUCTION ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://intelligestor-backend.onrender.com';
 
 // Criar instância do axios
 const axiosInstance = axios.create({
@@ -19,16 +26,18 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Adicionar token de autenticação se existir
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = IS_BROWSER ? localStorage.getItem('auth_token') : null;
     if (token) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+
     return config;
   },
   (error) => {
-    console.error('[API Request Error]', error);
+    if (IS_DEV) {
+      console.error('[API Request Error]', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -36,21 +45,22 @@ axiosInstance.interceptors.request.use(
 // Interceptor de resposta
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.config.url} - Status: ${response.status}`);
     return response;
   },
   (error: AxiosError) => {
-    console.error('[API Response Error]', {
-      url: error.config?.url,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
+    if (IS_DEV) {
+      console.error('[API Response Error]', {
+        url: error.config?.url,
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
+    }
 
     // Tratamento de erros específicos
     if (error.response?.status === 401) {
       // Limpar token e redirecionar para login
-      if (typeof window !== 'undefined') {
+      if (IS_BROWSER) {
         localStorage.removeItem('auth_token');
         window.location.href = '/login';
       }
@@ -61,7 +71,7 @@ axiosInstance.interceptors.response.use(
 );
 
 // Tipo para respostas da API
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   status?: string;
   message?: string;
   data?: T;
@@ -70,10 +80,10 @@ export interface ApiResponse<T = any> {
   // Campos específicos do ML
   success?: boolean;
   count?: number;
-  anuncios?: any[];
-  perguntas?: any[];
-  vendas?: any[];
-  items?: any[];
+  anuncios?: unknown[];
+  perguntas?: unknown[];
+  vendas?: unknown[];
+  items?: unknown[];
 }
 
 export default axiosInstance;

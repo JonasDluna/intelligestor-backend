@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/atoms';
 import { MessageCircle, RefreshCw, Send, CheckCircle } from 'lucide-react';
 import api from '@/lib/api';
@@ -22,29 +22,25 @@ export default function PerguntasTab() {
   const [respostaTexto, setRespostaTexto] = useState<Record<number, string>>({});
   const [respondendo, setRespondendo] = useState<number | null>(null);
 
-  const loadPerguntas = async () => {
+  const loadPerguntas = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.mlExtended.perguntas(statusFilter);
-      console.log('[DEBUG] Response perguntas:', response);
       if (response?.success && response?.perguntas) {
         setPerguntas(response.perguntas);
-      } else {
-        console.warn('[DEBUG] Resposta inválida perguntas:', response);
       }
     } catch (error) {
       console.error('Erro ao carregar perguntas:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     loadPerguntas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [loadPerguntas]);
 
-  const handleResponder = async (questionId: number) => {
+  const handleResponder = useCallback(async (questionId: number) => {
     const resposta = respostaTexto[questionId];
     if (!resposta || !resposta.trim()) {
       alert('Digite uma resposta antes de enviar');
@@ -54,9 +50,7 @@ export default function PerguntasTab() {
     try {
       setRespondendo(questionId);
       await api.mlExtended.responderPergunta(questionId, resposta);
-      
-      // Limpa campo e recarrega
-      setRespostaTexto(prev => ({ ...prev, [questionId]: '' }));
+      setRespostaTexto((prev) => ({ ...prev, [questionId]: '' }));
       await loadPerguntas();
       alert('Resposta enviada com sucesso!');
     } catch (error) {
@@ -65,7 +59,7 @@ export default function PerguntasTab() {
     } finally {
       setRespondendo(null);
     }
-  };
+  }, [loadPerguntas, respostaTexto]);
 
   const formatDate = (isoDate: string) => {
     const date = new Date(isoDate);
@@ -79,9 +73,15 @@ export default function PerguntasTab() {
   };
 
   // Estatísticas
-  const pendentes = perguntas.filter(p => p.status === 'UNANSWERED').length;
-  const respondidas = perguntas.filter(p => p.status !== 'UNANSWERED').length;
-  const total = perguntas.length;
+  const { pendentes, respondidas, total } = useMemo(() => {
+    const pend = perguntas.filter((p) => p.status === 'UNANSWERED').length;
+    const resp = perguntas.length - pend;
+    return {
+      pendentes: pend,
+      respondidas: resp,
+      total: perguntas.length,
+    };
+  }, [perguntas]);
 
   return (
     <div className="space-y-6">

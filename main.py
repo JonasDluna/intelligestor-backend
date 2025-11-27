@@ -19,7 +19,8 @@ from app.routers import (
     ml_real,  # Nova rota para dados REAIS do ML
     automacao,
     webhooks_ml,
-    ai_analysis
+    ai_analysis,
+    integrations
 )
 
 # Criar aplicação FastAPI
@@ -74,6 +75,7 @@ app.include_router(estoque.router)
 app.include_router(ml.router)
 app.include_router(ml_real.router)  # API REAL do Mercado Livre
 app.include_router(automacao.router)
+app.include_router(integrations.router)
 
 
 @app.get("/")

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
+import axiosInstance, { ApiResponse } from '@/lib/axios';
 import { authApi } from '@/lib/api';
 
 interface User {
@@ -32,6 +34,52 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+interface AuthSuccessPayload {
+  access_token: string;
+  token_type?: string;
+  user: {
+    id: string;
+    name?: string;
+    email: string;
+    ml_user_id?: string;
+    ml_connected?: boolean;
+  };
+}
+
+const unwrapAuthData = (
+  payload: ApiResponse<AuthSuccessPayload> | AuthSuccessPayload
+): AuthSuccessPayload => {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return (payload as ApiResponse<AuthSuccessPayload>).data ?? (payload as AuthSuccessPayload);
+  }
+  return payload as AuthSuccessPayload;
+};
+
+const buildAuthError = (action: 'login' | 'register', error: unknown): Error => {
+  if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      return new Error(
+        action === 'login'
+          ? 'Não foi possível conectar ao servidor. Verifique o endereço da API e tente novamente.'
+          : 'Não foi possível conectar ao servidor para registrar. Confirme o backend e tente novamente.'
+      );
+    }
+
+    const detail = (error.response.data as { detail?: string; message?: string }) ?? {};
+    const message =
+      detail.detail ||
+      detail.message ||
+      error.response.data?.error ||
+      error.response.data?.message ||
+      (action === 'login' ? 'Falha no login. Verifique suas credenciais.' : 'Falha no registro. Dados inválidos.');
+    return new Error(message);
+  }
+
+  return error instanceof Error
+    ? error
+    : new Error(action === 'login' ? 'Erro inesperado no login.' : 'Erro inesperado no registro.');
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,26 +106,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await axiosInstance.post<ApiResponse<AuthSuccessPayload>>(
+        '/auth/login',
+        { email, password }
+      );
+      const { access_token, user: remoteUser } = unwrapAuthData(response.data);
 
-      if (!response.ok) {
-        throw new Error('Falha no login');
+      if (!access_token || !remoteUser) {
+        throw new Error('Resposta inválida do servidor de autenticação');
       }
 
-      const data = await response.json();
-      const { access_token, user } = data;
-
       const userData: User = {
-        id: user.id,
-        name: user.name || user.email.split('@')[0],
-        email: user.email,
-        ml_connected: false,
+        id: remoteUser.id,
+        name: remoteUser.name || remoteUser.email.split('@')[0],
+        email: remoteUser.email,
+        ml_user_id: remoteUser.ml_user_id,
+        ml_connected: Boolean(remoteUser.ml_connected),
       };
 
       localStorage.setItem('auth_token', access_token);
@@ -86,39 +130,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Login realizado:', userData);
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      const normalized = buildAuthError('login', error);
+      console.error('Login error:', normalized);
+      throw normalized;
     }
   };
 
   const register = async (data: RegisterData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axiosInstance.post<ApiResponse<AuthSuccessPayload>>(
+        '/auth/register',
+        {
           email: data.email,
           password: data.senha,
           nome: data.nome,
           empresa: data.empresa,
-        }),
-      });
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw { response: { data: errorData } };
+      const { access_token, user: remoteUser } = unwrapAuthData(response.data);
+
+      if (!access_token || !remoteUser) {
+        throw new Error('Resposta inválida do servidor de registro');
       }
 
-      const responseData = await response.json();
-      const { access_token, user } = responseData;
-
       const userData: User = {
-        id: user.id,
-        name: user.name || user.email.split('@')[0],
-        email: user.email,
-        ml_connected: false,
+        id: remoteUser.id,
+        name: remoteUser.name || remoteUser.email.split('@')[0],
+        email: remoteUser.email,
+        ml_user_id: remoteUser.ml_user_id,
+        ml_connected: Boolean(remoteUser.ml_connected),
       };
 
       localStorage.setItem('auth_token', access_token);
@@ -127,8 +168,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Registro realizado:', userData);
     } catch (error) {
-      console.error('Register error:', error);
-      throw error;
+      const normalized = buildAuthError('register', error);
+      console.error('Register error:', normalized);
+      throw normalized;
     }
   };
 

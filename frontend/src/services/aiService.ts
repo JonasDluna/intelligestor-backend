@@ -1,12 +1,19 @@
-'use client';
-
 import axiosInstance from '@/lib/axios';
 
 export interface AIAnalysisRequest {
-  item_data: any;
+  item_data: AIItemData;
   analysis_type: 'pricing' | 'competition' | 'strategy' | 'promotion' | 'trends';
   user_context?: string;
-  market_data?: any;
+  market_data?: Record<string, unknown>;
+}
+
+export interface AIItemData {
+  my_price?: number;
+  current_price?: number;
+  champion_price?: number;
+  status?: 'winning' | 'competing' | 'sharing_first_place' | 'listed' | string;
+  price_to_win?: number;
+  [key: string]: unknown;
 }
 
 export interface AIAnalysisResponse {
@@ -18,12 +25,8 @@ export interface AIAnalysisResponse {
 }
 
 class AIService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
   async analyzeProduct(request: AIAnalysisRequest, userId: string): Promise<AIAnalysisResponse> {
     try {
-      console.log('🤖 Solicitando análise de IA:', request.analysis_type);
-      
       const response = await axiosInstance.post(`/api/ai/analyze`, {
         ...request,
         user_id: userId
@@ -34,7 +37,7 @@ class AIService {
       } else {
         throw new Error(response.data.message || 'Erro na análise de IA');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro na análise de IA:', error);
       
       // Sistema de fallback melhorado baseado nos dados reais
@@ -46,10 +49,10 @@ class AIService {
     const { item_data, analysis_type } = request;
     
     // Análise baseada nos dados disponíveis
-    const itemPrice = item_data.my_price || item_data.current_price || 0;
-    const championPrice = item_data.champion_price;
+    const itemPrice = Number(item_data.my_price ?? item_data.current_price ?? 0);
+    const championPrice = item_data.champion_price ?? undefined;
     const status = item_data.status;
-    const priceToWin = item_data.price_to_win;
+    const priceToWin = item_data.price_to_win ?? undefined;
     
     let analysis = '';
     let recommendations: string[] = [];
@@ -177,7 +180,7 @@ class AIService {
     };
   }
 
-  async getPricingRecommendation(itemData: any, userId: string): Promise<{
+  async getPricingRecommendation(itemData: AIItemData, userId: string): Promise<{
     recommended_price: number;
     price_range: { min: number; max: number };
     reasoning: string;
@@ -194,15 +197,17 @@ class AIService {
       } else {
         throw new Error(response.data.message || 'Erro na recomendação de preço');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro na recomendação de preço:', error);
       
       // Fallback
+      const currentPrice = Number(itemData.my_price ?? itemData.current_price ?? 0);
+      const safePrice = currentPrice > 0 ? currentPrice : 1;
       return {
-        recommended_price: itemData.my_price * 0.95,
+        recommended_price: Number((safePrice * 0.95).toFixed(2)),
         price_range: { 
-          min: itemData.my_price * 0.85, 
-          max: itemData.my_price * 1.05 
+          min: Number((safePrice * 0.85).toFixed(2)),
+          max: Number((safePrice * 1.05).toFixed(2)),
         },
         reasoning: 'Análise baseada em dados históricos e posição competitiva atual.',
         impact_analysis: 'Redução de 5% pode melhorar competitividade mantendo margem saudável.'
@@ -210,7 +215,7 @@ class AIService {
     }
   }
 
-  async getCompetitorAnalysis(itemData: any, userId: string): Promise<{
+  async getCompetitorAnalysis(itemData: AIItemData, userId: string): Promise<{
     top_competitors: Array<{
       seller_id: string;
       price: number;
@@ -233,7 +238,7 @@ class AIService {
       } else {
         throw new Error(response.data.message || 'Erro na análise de concorrentes');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro na análise de concorrentes:', error);
       
       // Fallback
@@ -241,7 +246,7 @@ class AIService {
         top_competitors: [
           {
             seller_id: 'COMPETITOR_1',
-            price: itemData.champion_price || itemData.my_price * 0.9,
+            price: Number(itemData.champion_price ?? itemData.my_price ?? 0) || 0,
             reputation: 'Verde',
             strengths: ['Preço competitivo', 'Frete grátis'],
             weaknesses: ['Menor reputação', 'Estoque limitado']
@@ -254,7 +259,7 @@ class AIService {
     }
   }
 
-  async generateMarketingStrategy(itemData: any, userId: string): Promise<{
+  async generateMarketingStrategy(itemData: AIItemData, userId: string): Promise<{
     strategy_type: string;
     description: string;
     tactics: string[];
@@ -272,7 +277,7 @@ class AIService {
       } else {
         throw new Error(response.data.message || 'Erro na estratégia de marketing');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro na estratégia de marketing:', error);
       
       // Fallback
@@ -300,69 +305,6 @@ class AIService {
     }
   }
 
-  private getMockAnalysis(type: string): AIAnalysisResponse {
-    const mockAnalyses = {
-      pricing: {
-        analysis: 'Análise de precificação indica oportunidade de otimização. O preço atual está 8% acima da média do mercado, mas a margem de lucro permite ajustes estratégicos.',
-        recommendations: [
-          'Reduzir preço em 5% para melhorar competitividade',
-          'Implementar preço dinâmico baseado na concorrência',
-          'Considerar promoções sazonais'
-        ],
-        confidence_score: 0.85,
-        key_insights: [
-          'Elasticidade de demanda moderada para este produto',
-          'Concorrentes principais com preços 5-12% menores',
-          'Margem atual permite flexibilidade de 15%'
-        ],
-        action_items: [
-          'Testar redução gradual de preço',
-          'Monitorar impacto nas vendas por 7 dias',
-          'Ajustar estratégia com base nos resultados'
-        ]
-      },
-      competition: {
-        analysis: 'Análise competitiva revela posição intermediária no mercado. Principais concorrentes têm vantagens em preço e frete, mas oportunidades existem em diferenciação.',
-        recommendations: [
-          'Melhorar tempo de entrega',
-          'Destacar diferenciais únicos',
-          'Implementar programa de fidelidade'
-        ],
-        confidence_score: 0.78,
-        key_insights: [
-          '3 concorrentes principais identificados',
-          'Vantagem competitiva em qualidade do atendimento',
-          'Oportunidade em nicho específico do produto'
-        ],
-        action_items: [
-          'Analisar estratégias dos top 3 concorrentes',
-          'Desenvolver proposta de valor única',
-          'Implementar melhorias no processo de venda'
-        ]
-      },
-      strategy: {
-        analysis: 'Estratégia atual mostra potencial de crescimento. Recomenda-se foco em diferenciação e experiência do cliente para construir vantagem competitiva sustentável.',
-        recommendations: [
-          'Investir em marketing de conteúdo',
-          'Melhorar experiência pós-venda',
-          'Expandir linha de produtos relacionados'
-        ],
-        confidence_score: 0.82,
-        key_insights: [
-          'Taxa de retenção de clientes de 65%',
-          'Potencial de cross-selling identificado',
-          'Mercado em crescimento de 12% ao ano'
-        ],
-        action_items: [
-          'Desenvolver plano de content marketing',
-          'Implementar pesquisa de satisfação',
-          'Mapear produtos complementares'
-        ]
-      }
-    };
-
-    return mockAnalyses[type as keyof typeof mockAnalyses] || mockAnalyses.pricing;
-  }
 }
 
 export const aiService = new AIService();
