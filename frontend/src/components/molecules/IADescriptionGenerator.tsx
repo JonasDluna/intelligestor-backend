@@ -41,7 +41,7 @@ export const IADescriptionGenerator: React.FC<IADescriptionGeneratorProps> = ({
 
   const handleUseDescription = () => {
     if ((gerarDescricao.data?.data as any)?.descricao) {
-      onDescriptionGenerated((gerarDescricao.data.data as any).descricao);
+      onDescriptionGenerated((gerarDescricao.data?.data as any).descricao);
       onClose?.();
     }
   };
@@ -104,7 +104,7 @@ export const IADescriptionGenerator: React.FC<IADescriptionGeneratorProps> = ({
           {/* Prompt Adicional */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              InstruÃƒÂ§ÃƒÂµes Adicionais (Opcional)
+              Instruções Adicionais (Opcional)
             </label>
             <textarea
               value={prompt}
