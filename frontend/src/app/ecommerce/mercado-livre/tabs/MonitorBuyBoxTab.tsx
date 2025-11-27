@@ -48,6 +48,9 @@ interface BuyBoxItem {
   winner_price_difference?: number;
   winner_price_difference_percent?: number;
   
+  // Imagens
+  pictures?: any[];
+  
   // Para compatibilidade com código antigo
   title?: string;
   ml_id: string;
