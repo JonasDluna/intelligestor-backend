@@ -122,6 +122,10 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Verificação de saúde da aplicação"""
+    from urllib.parse import urlparse
+    supa_url = settings.SUPABASE_URL or ""
+    host = urlparse(supa_url).netloc if supa_url else ""
+    masked_host = host[:6] + "..." + host[-10:] if host and len(host) > 16 else host
     return {
         "status": "healthy",
         "timestamp": "2025-11-14T00:00:00Z",
@@ -129,6 +133,11 @@ async def health_check():
             "supabase": "connected" if settings.SUPABASE_URL else "not configured",
             "openai": "configured" if settings.OPENAI_API_KEY else "not configured",
             "mercadolivre": "configured" if settings.ML_CLIENT_ID else "not configured"
+        },
+        "supabase_details": {
+            "configured": bool(settings.SUPABASE_URL),
+            "host": masked_host,
+            "has_service_role": bool(settings.SUPABASE_SERVICE_ROLE_KEY)
         }
     }
 
