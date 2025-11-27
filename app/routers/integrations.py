@@ -5,7 +5,7 @@ Fluxo:
 - Geração de auth URL por integração
 - Callback salva tokens na própria integração
 """
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, HTTPException, Query, Body, Request
 from fastapi.responses import RedirectResponse
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
@@ -103,8 +103,19 @@ async def get_auth_url(integration_id: str, user_id: str = Query(..., descriptio
     return {"status": "success", "auth_url": auth_url}
 
 
-@router.get("/callback")
-async def oauth_callback(code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
+@router.api_route("/callback", methods=["GET", "POST"])
+async def oauth_callback(request: Request, code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
+    # Suporta GET (query) e POST (form-url-encoded) conforme provedor
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            # Não sobrescrever se já veio via query
+            code = code or form.get("code")
+            state = state or form.get("state")
+            error = error or form.get("error")
+        except Exception:
+            pass
+
     # Em caso de erro no provedor, redireciona ao frontend com querystring informando o erro
     if error:
         target = f"{settings.FRONTEND_SUCCESS_REDIRECT}?error={quote(str(error))}"
