@@ -30,7 +30,9 @@ services:
       - key: ML_CLIENT_SECRET
         sync: false
       - key: ML_REDIRECT_URI
-        value: https://intelligestor-backend.onrender.com/auth/ml/callback
+        value: https://intelligestor-backend.onrender.com/integrations/ml/callback
+      - key: FRONTEND_SUCCESS_REDIRECT
+        value: https://intelligestor-frontend.vercel.app/ecommerce
       - key: SECRET_KEY
         generateValue: true
       - key: RENDER_URL
