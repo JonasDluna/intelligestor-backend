@@ -60,34 +60,37 @@ async def verificar_status_ml(user_id: str = Depends(get_current_user_id)):
     try:
         print(f"[DEBUG] Verificando status ML para user_id: {user_id}")
         supabase = get_supabase_client()
-        
-        result = supabase.table("tokens_ml")\
-            .select("ml_user_id, nickname, expires_at, access_token")\
-            .eq("user_id", user_id)\
-            .maybe_single()\
+
+        result = (
+            supabase.table("tokens_ml")
+            .select("ml_user_id, nickname, expires_at, access_token")
+            .eq("user_id", user_id)
+            .maybe_single()
             .execute()
-        
+        )
+
         print(f"[DEBUG] Query result exists: {result is not None}")
         print(f"[DEBUG] Query data exists: {result.data is not None if result else False}")
-        
+
         if result and result.data:
-            has_token = bool(result.data.get("access_token"))
+            access_token = result.data.get("access_token")
+            has_token = bool(access_token)
             print(f"[DEBUG] Token exists: {has_token}")
             print(f"[DEBUG] Nickname: {result.data.get('nickname')}")
             print(f"[DEBUG] ML User ID: {result.data.get('ml_user_id')}")
-            
+
             return {
-                "connected": True,
-                "ml_user_id": result.data.get("ml_user_id"),
-                "nickname": result.data.get("nickname"),
-                "expires_at": result.data.get("expires_at")
+                "connected": has_token,
+                "ml_user_id": result.data.get("ml_user_id") if has_token else None,
+                "nickname": result.data.get("nickname") if has_token else None,
+                "expires_at": result.data.get("expires_at") if has_token else None,
             }
         else:
             print(f"[DEBUG] Nenhum token encontrado para user_id: {user_id}")
             return {
                 "connected": False,
                 "ml_user_id": None,
-                "nickname": None
+                "nickname": None,
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao verificar status ML: {str(e)}")

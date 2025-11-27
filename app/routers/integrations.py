@@ -163,8 +163,13 @@ async def oauth_callback(request: Request, code: Optional[str] = None, state: Op
     }
     _table().update(update_payload).eq("id", state).execute()
 
-    # Sucesso: redireciona para o frontend (experiência unificada)
-    return RedirectResponse(url=settings.FRONTEND_SUCCESS_REDIRECT, status_code=302)
+    # Sucesso: redireciona para o frontend com indicador de conexão
+    success_url = settings.FRONTEND_SUCCESS_REDIRECT
+    if "?" in success_url:
+        success_url = success_url + "&connected=1"
+    else:
+        success_url = success_url + "?connected=1"
+    return RedirectResponse(url=success_url, status_code=302)
 
 
 @router.post("/{integration_id}/disconnect")
