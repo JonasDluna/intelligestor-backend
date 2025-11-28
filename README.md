@@ -23,7 +23,7 @@ intelligestor/
 │
 ├── infra/
 │   ├── render/
-│   │   └── render.yaml           # Manifesto Render (cópia)
+│   │   └── render.yaml           # Manifesto Render (ativo via Blueprint)
 │   ├── vercel/
 │   │   ├── backend-vercel.json   # Manifesto Vercel (backend opcional)
 │   │   └── frontend-vercel.json  # Manifesto Vercel (frontend)
@@ -34,7 +34,7 @@ intelligestor/
 │   └── *.md
 │
 ├── .env.example                  # Variáveis exemplo do backend
-├── render.yaml                   # Manifesto Render (ativo)
+├── render.yaml                   # Neutralizado (use infra/render/render.yaml)
 ├── vercel.json                   # Manifesto Vercel backend (opcional)
 ├── README.md                     # Este arquivo
 └── intelligestor-backend.code-workspace
@@ -130,9 +130,10 @@ npm run dev
 ## 🚀 Deploy
 
 ### Backend (Render)
-- O arquivo ativo continua no raiz: `render.yaml`.
-- Já atualizado para nova estrutura (instala `backend/requirements.txt` e inicia com `--app-dir backend`).
-- Alternativa: mover para `infra/render/render.yaml` e apontar no Render.
+- Aplique o Blueprint com `infra/render/render.yaml` (usa `rootDir: backend`).
+- Build: `pip install --no-cache-dir -r requirements.txt` (no diretório backend)
+- Start: `uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2`
+- O `render.yaml` da raiz foi neutralizado para evitar conflitos.
 
 ### Frontend (Vercel)
 ```powershell
