@@ -5,12 +5,11 @@ services:
     region: oregon
     plan: free
     branch: main
-    rootDir: backend
     buildCommand: |
       python --version
       pip install --upgrade pip setuptools wheel
-      pip install --no-cache-dir -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
+      pip install --no-cache-dir -r backend/requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2 --app-dir backend
     envVars:
       - key: ENVIRONMENT
         value: production
